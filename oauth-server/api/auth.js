@@ -9,7 +9,7 @@ export default function handler(req, res) {
   const authUrl = `https://www.figma.com/oauth?` +
     `client_id=${clientId}` +
     `&redirect_uri=${encodeURIComponent(redirectUri)}` +
-    `&scope=files:read` +
+    `&scope=file_content:read file_versions:read` +
     `&state=${state}` +
     `&response_type=code`;
   
