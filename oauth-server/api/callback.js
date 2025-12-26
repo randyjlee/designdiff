@@ -55,7 +55,7 @@ export default async function handler(req, res) {
     
   } catch (err) {
     console.error('OAuth error:', err);
-    res.status(500).send(errorPage(err.message));
+    res.status(500).send(errorPage(`${err.message} | Client ID: ${process.env.FIGMA_CLIENT_ID ? 'SET' : 'MISSING'} | Secret: ${process.env.FIGMA_CLIENT_SECRET ? process.env.FIGMA_CLIENT_SECRET.length + ' chars' : 'MISSING'}`));
   }
 }
 
