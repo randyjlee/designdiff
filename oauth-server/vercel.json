@@ -1,0 +1,14 @@
+{
+  "version": 2,
+  "routes": [
+    {
+      "src": "/",
+      "dest": "/api/auth"
+    }
+  ],
+  "env": {
+    "FIGMA_CLIENT_ID": "@figma-client-id",
+    "FIGMA_CLIENT_SECRET": "@figma-client-secret"
+  }
+}
+

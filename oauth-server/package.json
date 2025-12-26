@@ -1,0 +1,14 @@
+{
+  "name": "design-diff-oauth",
+  "version": "1.0.0",
+  "description": "OAuth server for Design Diff Figma plugin",
+  "scripts": {
+    "dev": "vercel dev",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {},
+  "devDependencies": {
+    "vercel": "^32.0.0"
+  }
+}
+
