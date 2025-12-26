@@ -32,11 +32,12 @@ export default async function handler(req, res) {
       }),
     });
     
-    if (!tokenResponse.ok) {
-      throw new Error('Failed to exchange code for token');
-    }
-    
     const tokenData = await tokenResponse.json();
+    
+    if (!tokenResponse.ok) {
+      console.error('Token exchange failed:', tokenData);
+      throw new Error(tokenData.message || tokenData.error || 'Failed to exchange code for token');
+    }
     
     // Return success page with token
     res.status(200).send(successPage(tokenData.access_token));
