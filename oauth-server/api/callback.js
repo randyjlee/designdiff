@@ -17,6 +17,14 @@ export default async function handler(req, res) {
     const clientSecret = process.env.FIGMA_CLIENT_SECRET;
     const redirectUri = process.env.REDIRECT_URI || `https://${req.headers.host}/api/callback`;
     
+    // Debug log
+    console.log('OAuth Debug:', {
+      clientId: clientId ? clientId.substring(0, 5) + '...' : 'MISSING',
+      clientSecretLength: clientSecret ? clientSecret.length : 0,
+      redirectUri,
+      code: code ? code.substring(0, 10) + '...' : 'MISSING'
+    });
+    
     // Exchange code for token
     const tokenResponse = await fetch('https://www.figma.com/api/oauth/token', {
       method: 'POST',
@@ -34,9 +42,12 @@ export default async function handler(req, res) {
     
     const tokenData = await tokenResponse.json();
     
+    console.log('Token response status:', tokenResponse.status);
+    console.log('Token response:', JSON.stringify(tokenData));
+    
     if (!tokenResponse.ok) {
-      console.error('Token exchange failed:', tokenData);
-      throw new Error(tokenData.message || tokenData.error || 'Failed to exchange code for token');
+      const errorMsg = tokenData.message || tokenData.error_description || tokenData.error || 'Failed to exchange code for token';
+      throw new Error(errorMsg);
     }
     
     // Return success page with token
