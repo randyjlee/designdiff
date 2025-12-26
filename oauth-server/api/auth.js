@@ -1,5 +1,6 @@
 // Figma OAuth - 인증 시작
 // Vercel Serverless Function
+// v2 - fixed scopes
 
 export default function handler(req, res) {
   const clientId = process.env.FIGMA_CLIENT_ID;
