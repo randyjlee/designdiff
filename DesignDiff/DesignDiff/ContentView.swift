@@ -28,11 +28,8 @@ struct ContentView: View {
             }
             
             VStack(spacing: 0) {
-                // Header
+                // Header (minimal drag area)
                 HeaderView()
-                
-                Divider()
-                    .background(Color.white.opacity(0.1))
                 
                 // Main Content
                 if appState.isProcessing {
@@ -80,8 +77,7 @@ struct HeaderView: View {
         }
         .padding(.leading, 80)  // Space for window controls
         .padding(.trailing, 24)
-        .padding(.vertical, 8)
-        .frame(height: 40)
+        .frame(height: 28)
     }
 }
 
