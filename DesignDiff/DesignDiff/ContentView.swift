@@ -61,21 +61,11 @@ struct HeaderView: View {
         HStack(spacing: 16) {
             // Logo
             HStack(spacing: 10) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 10)
-                        .fill(
-                            LinearGradient(
-                                colors: [Color(hex: "ff6b35"), Color(hex: "e55a2b")],
-                                startPoint: .topLeading,
-                                endPoint: .bottomTrailing
-                            )
-                        )
-                        .frame(width: 36, height: 36)
-                    
-                    Image(systemName: "square.3.layers.3d")
-                        .font(.system(size: 18, weight: .semibold))
-                        .foregroundColor(.white)
-                }
+                Image("AppLogoIcon")
+                    .resizable()
+                    .aspectRatio(contentMode: .fit)
+                    .frame(width: 36, height: 36)
+                    .cornerRadius(8)
                 
                 Text("Design")
                     .font(.system(size: 22, weight: .bold))
