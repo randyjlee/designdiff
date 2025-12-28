@@ -52,28 +52,14 @@ struct ContentView: View {
     }
 }
 
-// MARK: - Header View
+// MARK: - Header View (Minimal - just for window drag area)
 
 struct HeaderView: View {
     @EnvironmentObject var appState: AppState
     
     var body: some View {
-        HStack(spacing: 16) {
-            // Logo
-            HStack(spacing: 0) {
-                Text("Design")
-                    .font(.system(size: 22, weight: .bold))
-                    .foregroundColor(.white)
-                +
-                Text("Diff")
-                    .font(.system(size: 22, weight: .bold))
-                    .foregroundColor(Color(hex: "ff6b35"))
-            }
-            .lineLimit(1)
-            .minimumScaleFactor(0.6)
-            .fixedSize(horizontal: false, vertical: true)
-            
-            Spacer(minLength: 20)
+        HStack {
+            Spacer()
             
             // New Analysis button (when showing results)
             if case .complete = appState.status {
@@ -91,22 +77,11 @@ struct HeaderView: View {
                 }
                 .buttonStyle(.plain)
             }
-            
-            // Settings
-            SettingsLink {
-                Image(systemName: "gearshape")
-                    .font(.system(size: 15))
-                    .foregroundColor(.white.opacity(0.6))
-                    .frame(width: 32, height: 32)
-                    .background(Color.white.opacity(0.05))
-                    .cornerRadius(8)
-            }
-            .buttonStyle(.plain)
         }
-        .padding(.leading, 80)  // Space for window controls (red, yellow, green buttons)
+        .padding(.leading, 80)  // Space for window controls
         .padding(.trailing, 24)
-        .padding(.vertical, 16)
-        .frame(minWidth: 400)
+        .padding(.vertical, 8)
+        .frame(height: 40)
     }
 }
 
@@ -120,15 +95,29 @@ struct UploadView: View {
         VStack(spacing: 32) {
             Spacer()
             
-            // Description
-            VStack(spacing: 8) {
-                Text("Upload before & after designs")
-                    .font(.system(size: 28, weight: .semibold))
-                    .foregroundColor(.white)
+            // Logo and Description
+            VStack(spacing: 16) {
+                // DesignDiff Logo
+                HStack(spacing: 0) {
+                    Text("Design")
+                        .font(.system(size: 32, weight: .bold))
+                        .foregroundColor(.white)
+                    +
+                    Text("Diff")
+                        .font(.system(size: 32, weight: .bold))
+                        .foregroundColor(Color(hex: "ff6b35"))
+                }
                 
-                Text("Get AI-powered change detection, developer specs, and team-ready summaries")
-                    .font(.system(size: 15))
-                    .foregroundColor(.white.opacity(0.5))
+                // Description
+                VStack(spacing: 8) {
+                    Text("Upload before & after designs")
+                        .font(.system(size: 22, weight: .medium))
+                        .foregroundColor(.white.opacity(0.9))
+                    
+                    Text("Get AI-powered change detection, developer specs, and team-ready summaries")
+                        .font(.system(size: 14))
+                        .foregroundColor(.white.opacity(0.5))
+                }
             }
             
             // Upload zones
