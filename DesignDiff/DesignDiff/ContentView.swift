@@ -61,12 +61,6 @@ struct HeaderView: View {
         HStack(spacing: 16) {
             // Logo
             HStack(spacing: 10) {
-                Image("AppLogoIcon")
-                    .resizable()
-                    .aspectRatio(contentMode: .fit)
-                    .frame(width: 36, height: 36)
-                    .cornerRadius(8)
-                
                 Text("Design")
                     .font(.system(size: 22, weight: .bold))
                     .foregroundColor(.white)
