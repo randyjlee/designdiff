@@ -58,6 +58,15 @@ class AppState: ObservableObject {
         reset()
     }
     
+    func cancelAnalysis() {
+        // Reset status to idle without clearing images
+        diffResult = nil
+        analysisResult = nil
+        editableAnnotations = []
+        selectedAnnotationId = nil
+        status = .idle
+    }
+    
     // MARK: - Annotation Management
     
     func initializeEditableAnnotations() {

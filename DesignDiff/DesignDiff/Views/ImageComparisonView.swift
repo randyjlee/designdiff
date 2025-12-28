@@ -14,8 +14,8 @@ struct ImageComparisonView: View {
             }
             .padding(.horizontal, 20)
             .padding(.top, 16)
-            .padding(.bottom, 20)
-            .frame(maxWidth: .infinity)
+            .padding(.bottom, 8)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
         }
         .background(Color.white.opacity(0.02))
     }
@@ -115,7 +115,7 @@ struct ComparisonFrame: View {
                         .foregroundColor(.white.opacity(0.4))
                 }
             }
-            .frame(height: 540)
+            .frame(maxHeight: .infinity)
         }
         .frame(maxWidth: .infinity)
     }
@@ -202,7 +202,7 @@ struct AnnotatableAfterFrame: View {
                     frameSize = geometry.size
                 }
             }
-            .frame(height: 540)
+            .frame(maxHeight: .infinity)
         }
         .frame(maxWidth: .infinity)
     }

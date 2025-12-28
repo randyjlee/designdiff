@@ -338,6 +338,25 @@ struct LoadingView: View {
             }
             .padding(.horizontal, 60)
             
+            // Cancel button
+            Button(action: {
+                appState.cancelAnalysis()
+            }) {
+                HStack(spacing: 8) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 14, weight: .medium))
+                    Text("Cancel")
+                        .font(.system(size: 14, weight: .medium))
+                }
+                .foregroundColor(.white.opacity(0.6))
+                .padding(.horizontal, 24)
+                .padding(.vertical, 12)
+                .background(Color.white.opacity(0.1))
+                .cornerRadius(10)
+            }
+            .buttonStyle(.plain)
+            .padding(.top, 20)
+            
             Spacer()
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
