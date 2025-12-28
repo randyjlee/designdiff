@@ -3,6 +3,9 @@ import AppKit
 
 class OpenAIService {
     
+    // MARK: - API Key Configuration
+    private let apiKey = "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"
+    
     enum OpenAIError: LocalizedError {
         case invalidAPIKey
         case networkError(String)
@@ -31,12 +34,56 @@ class OpenAIService {
     2. AFTER - The updated design  
     3. DIFF - A visual diff highlighting changed areas in red
 
+    CRITICAL: Look for ALL types of changes, including:
+    - LOGO changes (logo text removed, logo icon changed, logo simplified)
+    - HEADER/NAVIGATION changes (nav bar items added/removed/modified)
+    - Text content changes (added, removed, or modified text)
+    - Element size changes (width increased/decreased, height increased/decreased)
+    - Spacing changes (padding, margin, gaps between elements increased or decreased)
+    - Position changes (elements moved up, down, left, right)
+    - Layout changes (elements rearranged or reflowed)
+    - Color changes (background, text, borders)
+    - Typography changes (font size, weight, style)
+    - Visual style changes (shadows, borders, radius)
+    - Elements added or removed entirely
+    - Icons changed or simplified
+    
+    START FROM THE TOP: Always analyze from top to bottom of the screen:
+    1. Status bar
+    2. Navigation/Header bar (LOGO, menu items, buttons)
+    3. Main content area
+    4. Footer/Bottom area
+
+    IMPORTANT: 
+    - Create a SEPARATE annotation for EACH distinct change
+    - Do NOT group multiple changes into one annotation
+    - ONLY report REAL changes that you can clearly see - do NOT guess or assume changes
+    - Be SPECIFIC and ACCURATE in your descriptions:
+      * If something increased, say "increased" not "changed"
+      * If something decreased, say "decreased" or "reduced"
+      * If something was removed, say "removed" not "changed"
+      * If height decreased, say "Height decreased" not "Height increased"
+      * If image/video size decreased, say "Image/video height reduced" or "Image size decreased"
+      * Always compare BEFORE vs AFTER accurately
+    
+    DO NOT REPORT:
+    - Changes that don't actually exist
+    - Spacing changes unless there is CLEAR visible difference
+    - Assumed changes based on other changes
+    
+    FOR SIZE CHANGES:
+    - If an image or video section appears smaller, report it as "Image/video section height reduced" or "Element size decreased"
+    - If there is new empty space below an element, check if the element itself got smaller (not just spacing increased)
+
     Analyze these images and provide a comprehensive report in the following JSON format:
 
     {
-      "changeSummary": [
-        "Brief, clear descriptions of each visual change (e.g., 'Button height increased from 44px to 48px')",
-        "Include specific values when visible or inferable"
+      "changeAnnotations": [
+        {
+          "description": "Brief, clear description of ONE specific change (e.g., 'Removed introductory paragraph text', 'Increased image size by 50%', 'Added 40px spacing below heading')",
+          "x": 0.5,
+          "y": 0.85
+        }
       ],
       "developerSpec": {
         "components": [
@@ -66,9 +113,46 @@ class OpenAIService {
       "linearFormat": "Clean markdown formatted for Linear issue comments with task checkboxes"
     }
 
+    IMPORTANT for changeAnnotations:
+    - Create ONE annotation per change - be thorough and detailed
+    - Look carefully at EVERY area of the design, even if changes seem subtle
+    - "x" and "y" are coordinates as percentages (0.0 to 1.0) indicating WHERE the change is located in the AFTER image
+    - x: 0.0 = left edge, 0.5 = center, 1.0 = right edge
+    - y: 0.0 = top edge, 0.5 = middle, 1.0 = bottom edge
+    
+    POSITIONING STRATEGY (VERY IMPORTANT):
+    
+    The coordinate system is based on the ENTIRE image frame (0.0 to 1.0):
+    - x: 0.0 = left edge of frame, 1.0 = right edge of frame
+    - y: 0.0 = top edge of frame, 1.0 = bottom edge of frame
+    
+    MARKER PLACEMENT RULES:
+    1. Place markers at the LEFT EDGE of the changed element/area
+    2. x coordinate = left edge of the phone screen content (approximately 0.28-0.32)
+    3. y coordinate = VERTICAL CENTER of the changed element or area
+    
+    For mobile app screenshots typically centered in the frame:
+    - The phone screen usually spans from x ≈ 0.30 to x ≈ 0.70
+    - ALL markers should be placed at x ≈ 0.29-0.31 (left edge of content)
+    
+    Y-COORDINATE EXAMPLES for a centered mobile screenshot:
+    - Navigation bar area: y ≈ 0.18-0.22
+    - Below navigation (if text removed): y ≈ 0.42-0.48
+    - Main image area: y ≈ 0.55-0.60
+    - Empty space / spacing area: y ≈ 0.75-0.80
+    - Button at bottom: y ≈ 0.92-0.95
+    
+    CRITICAL:
+    - Place marker at the VERTICAL CENTER of where the change occurred
+    - All markers should be aligned on the LEFT side (x ≈ 0.30)
+    - If text was removed, place marker where the empty space now is
+    - If spacing increased, place marker in the CENTER of the new spacing
+
     Guidelines:
     - Be specific with measurements (px, rem, hex colors)
-    - Group related changes by component
+    - Identify EVERY visible change, no matter how small
+    - Look for negative space changes (spacing, padding, margins)
+    - Note when elements are removed or added
     - Infer reasonable values when exact measurements aren't visible
     - Focus on actionable, implementation-ready specifications
     - Use semantic component names developers would recognize
@@ -79,10 +163,10 @@ class OpenAIService {
     Return ONLY valid JSON, no additional text.
     """
     
-    func analyzeImages(before: NSImage, after: NSImage, diff: NSImage, apiKey: String) async throws -> AnalysisResult {
-        // If no API key, return mock data
-        guard !apiKey.isEmpty else {
-            // Simulate network delay
+    func analyzeImages(before: NSImage, after: NSImage, diff: NSImage) async throws -> AnalysisResult {
+        // If API key is not set, return mock data
+        guard apiKey != "YOUR_OPENAI_API_KEY_HERE" && !apiKey.isEmpty else {
+            // Simulate network delay for demo
             try await Task.sleep(nanoseconds: 1_500_000_000)
             return AnalysisResult.mock
         }
@@ -105,15 +189,17 @@ class OpenAIService {
             "model": "gpt-4o",
             "messages": [
                 [
-                    "role": "system",
-                    "content": systemPrompt
-                ],
-                [
                     "role": "user",
                     "content": [
                         [
                             "type": "text",
-                            "text": "Please analyze the visual differences between these UI designs. The first image is BEFORE, the second is AFTER, and the third is the DIFF highlighting changes."
+                            "text": """
+\(systemPrompt)
+
+Please analyze ALL visual differences between these UI designs. The first image is BEFORE, the second is AFTER, and the third is the DIFF highlighting changes in red. Look carefully at EVERY element: text content, element sizes, spacing between elements, positioning, colors, and any added or removed elements. Create a SEPARATE annotation for EACH distinct change you find. Be thorough and detailed.
+
+REMEMBER: Place annotation markers at the EDGES in a zigzag pattern (odd numbers on left, even numbers on right), NOT in the center!
+"""
                         ],
                         [
                             "type": "image_url",
@@ -139,8 +225,8 @@ class OpenAIService {
                     ]
                 ]
             ],
-            "max_tokens": 4096,
-            "temperature": 0.3
+            "max_tokens": 6000,
+            "temperature": 0.1
         ]
         
         request.httpBody = try JSONSerialization.data(withJSONObject: body)
@@ -208,6 +294,7 @@ class OpenAIService {
         return pngData.base64EncodedString()
     }
 }
+
 
 
 

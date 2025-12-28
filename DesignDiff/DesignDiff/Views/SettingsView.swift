@@ -1,53 +1,8 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @AppStorage("openAIAPIKey") private var apiKey: String = ""
-    @State private var showAPIKey: Bool = false
-    
     var body: some View {
         Form {
-            Section {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("OpenAI API Key")
-                        .font(.system(size: 13, weight: .medium))
-                    
-                    HStack {
-                        Group {
-                            if showAPIKey {
-                                TextField("sk-...", text: $apiKey)
-                            } else {
-                                SecureField("sk-...", text: $apiKey)
-                            }
-                        }
-                        .textFieldStyle(.roundedBorder)
-                        .font(.system(size: 13, design: .monospaced))
-                        
-                        Button(action: { showAPIKey.toggle() }) {
-                            Image(systemName: showAPIKey ? "eye.slash" : "eye")
-                                .foregroundColor(.secondary)
-                        }
-                        .buttonStyle(.plain)
-                    }
-                    
-                    Text("Get your API key at [platform.openai.com](https://platform.openai.com/api-keys)")
-                        .font(.system(size: 11))
-                        .foregroundColor(.secondary)
-                    
-                    if apiKey.isEmpty {
-                        HStack(spacing: 6) {
-                            Image(systemName: "info.circle")
-                                .font(.system(size: 11))
-                            Text("Without an API key, the app will use demo data")
-                                .font(.system(size: 11))
-                        }
-                        .foregroundColor(.orange)
-                        .padding(.top, 4)
-                    }
-                }
-            } header: {
-                Text("API Configuration")
-            }
-            
             Section {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("About DesignDiff")
@@ -72,7 +27,7 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .frame(width: 450, height: 380)
+        .frame(width: 450, height: 280)
     }
 }
 
@@ -97,6 +52,7 @@ struct FeatureRow: View {
 #Preview {
     SettingsView()
 }
+
 
 
 

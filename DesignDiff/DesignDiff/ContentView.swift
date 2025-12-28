@@ -35,12 +35,18 @@ struct ContentView: View {
                     .background(Color.white.opacity(0.1))
                 
                 // Main Content
-                if case .complete = appState.status, appState.analysisResult != nil {
+                if appState.isProcessing {
+                    LoadingView()
+                        .transition(.opacity)
+                } else if case .complete = appState.status, appState.analysisResult != nil {
                     ResultsView()
+                        .transition(.opacity)
                 } else {
                     UploadView()
+                        .transition(.opacity)
                 }
             }
+            .animation(.easeInOut(duration: 0.3), value: appState.status)
         }
         .preferredColorScheme(.dark)
     }
@@ -81,23 +87,6 @@ struct HeaderView: View {
             }
             
             Spacer()
-            
-            // Status indicator
-            if appState.isProcessing {
-                HStack(spacing: 8) {
-                    ProgressView()
-                        .scaleEffect(0.7)
-                        .progressViewStyle(CircularProgressViewStyle(tint: Color(hex: "ff6b35")))
-                    
-                    Text(appState.status == .diffing ? "Generating diff..." : "Analyzing...")
-                        .font(.system(size: 13))
-                        .foregroundColor(.white.opacity(0.7))
-                }
-                .padding(.horizontal, 16)
-                .padding(.vertical, 8)
-                .background(Color.white.opacity(0.05))
-                .cornerRadius(20)
-            }
             
             // New Analysis button (when showing results)
             if case .complete = appState.status {
@@ -245,6 +234,204 @@ struct UploadView: View {
             } else {
                 appState.setAfterImage(image)
             }
+        }
+    }
+}
+
+// MARK: - Loading View
+
+struct LoadingView: View {
+    @EnvironmentObject var appState: AppState
+    @State private var rotationAngle: Double = 0
+    @State private var pulseScale: CGFloat = 1.0
+    
+    var body: some View {
+        VStack(spacing: 32) {
+            Spacer()
+            
+            // Animated loading icon
+            ZStack {
+                // Outer ring
+                Circle()
+                    .stroke(
+                        LinearGradient(
+                            colors: [
+                                Color(hex: "ff6b35").opacity(0.3),
+                                Color(hex: "2dd4bf").opacity(0.3)
+                            ],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 3
+                    )
+                    .frame(width: 120, height: 120)
+                
+                // Spinning gradient ring
+                Circle()
+                    .trim(from: 0, to: 0.7)
+                    .stroke(
+                        LinearGradient(
+                            colors: [
+                                Color(hex: "ff6b35"),
+                                Color(hex: "2dd4bf")
+                            ],
+                            startPoint: .leading,
+                            endPoint: .trailing
+                        ),
+                        style: StrokeStyle(lineWidth: 4, lineCap: .round)
+                    )
+                    .frame(width: 120, height: 120)
+                    .rotationEffect(.degrees(rotationAngle))
+                    .onAppear {
+                        withAnimation(.linear(duration: 1.5).repeatForever(autoreverses: false)) {
+                            rotationAngle = 360
+                        }
+                    }
+                
+                // Center icon
+                Image(systemName: "sparkles")
+                    .font(.system(size: 40, weight: .medium))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [Color(hex: "ff6b35"), Color(hex: "2dd4bf")],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .scaleEffect(pulseScale)
+                    .onAppear {
+                        withAnimation(.easeInOut(duration: 1.0).repeatForever(autoreverses: true)) {
+                            pulseScale = 1.2
+                        }
+                    }
+            }
+            .shadow(color: Color(hex: "ff6b35").opacity(0.3), radius: 30)
+            
+            // Loading text
+            VStack(spacing: 12) {
+                Text(loadingTitle)
+                    .font(.system(size: 24, weight: .semibold))
+                    .foregroundColor(.white)
+                
+                Text(loadingSubtitle)
+                    .font(.system(size: 15))
+                    .foregroundColor(.white.opacity(0.5))
+                    .multilineTextAlignment(.center)
+                    .padding(.horizontal, 40)
+            }
+            
+            // Progress steps
+            HStack(spacing: 32) {
+                LoadingStep(
+                    icon: "photo.stack",
+                    title: "Generating Diff",
+                    isActive: appState.status == .diffing,
+                    isComplete: appState.status == .analyzing || appState.status == .complete
+                )
+                
+                LoadingStep(
+                    icon: "brain",
+                    title: "AI Analysis",
+                    isActive: appState.status == .analyzing,
+                    isComplete: appState.status == .complete
+                )
+            }
+            .padding(.horizontal, 60)
+            
+            Spacer()
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+    
+    private var loadingTitle: String {
+        switch appState.status {
+        case .diffing:
+            return "Generating visual diff..."
+        case .analyzing:
+            return "AI is analyzing changes..."
+        default:
+            return "Processing..."
+        }
+    }
+    
+    private var loadingSubtitle: String {
+        switch appState.status {
+        case .diffing:
+            return "Comparing before and after images pixel by pixel"
+        case .analyzing:
+            return "Identifying changes, extracting specs, and generating summaries"
+        default:
+            return "Please wait while we process your images"
+        }
+    }
+}
+
+// MARK: - Loading Step
+
+struct LoadingStep: View {
+    let icon: String
+    let title: String
+    let isActive: Bool
+    let isComplete: Bool
+    
+    @State private var checkmarkScale: CGFloat = 0.5
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            ZStack {
+                // Background circle
+                Circle()
+                    .fill(backgroundColor)
+                    .frame(width: 64, height: 64)
+                
+                if isComplete {
+                    // Checkmark
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 28, weight: .semibold))
+                        .foregroundColor(Color(hex: "2dd4bf"))
+                        .scaleEffect(checkmarkScale)
+                        .onAppear {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.6)) {
+                                checkmarkScale = 1.0
+                            }
+                        }
+                } else {
+                    // Icon
+                    Image(systemName: icon)
+                        .font(.system(size: 28, weight: .medium))
+                        .foregroundColor(iconColor)
+                }
+            }
+            
+            Text(title)
+                .font(.system(size: 14, weight: .medium))
+                .foregroundColor(textColor)
+        }
+    }
+    
+    private var backgroundColor: Color {
+        if isComplete {
+            return Color(hex: "2dd4bf").opacity(0.15)
+        } else if isActive {
+            return Color(hex: "ff6b35").opacity(0.15)
+        } else {
+            return Color.white.opacity(0.05)
+        }
+    }
+    
+    private var iconColor: Color {
+        if isActive {
+            return Color(hex: "ff6b35")
+        } else {
+            return Color.white.opacity(0.3)
+        }
+    }
+    
+    private var textColor: Color {
+        if isComplete || isActive {
+            return .white.opacity(0.9)
+        } else {
+            return .white.opacity(0.4)
         }
     }
 }

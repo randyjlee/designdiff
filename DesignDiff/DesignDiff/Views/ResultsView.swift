@@ -1,15 +1,13 @@
 import SwiftUI
 
 enum ResultTab: String, CaseIterable {
-    case summary = "Summary"
-    case tasks = "Tasks"
+    case annotations = "Annotations"
     case slack = "Slack"
     case linear = "Linear"
     
     var icon: String {
         switch self {
-        case .summary: return "doc.text"
-        case .tasks: return "checklist"
+        case .annotations: return "list.number"
         case .slack: return "number"
         case .linear: return "square.and.pencil"
         }
@@ -18,7 +16,7 @@ enum ResultTab: String, CaseIterable {
 
 struct ResultsView: View {
     @EnvironmentObject var appState: AppState
-    @State private var selectedTab: ResultTab = .summary
+    @State private var selectedTab: ResultTab = .annotations
     @State private var copiedId: String?
     
     var body: some View {
@@ -55,10 +53,8 @@ struct ResultsView: View {
                 ScrollView {
                     VStack(alignment: .leading, spacing: 20) {
                         switch selectedTab {
-                        case .summary:
-                            SummaryTabView(copiedId: $copiedId)
-                        case .tasks:
-                            TasksTabView(copiedId: $copiedId)
+                        case .annotations:
+                            AnnotationsTabView(copiedId: $copiedId)
                         case .slack:
                             SlackTabView(copiedId: $copiedId)
                         case .linear:
@@ -69,36 +65,31 @@ struct ResultsView: View {
                 }
                 
                 // Bottom Actions
-                HStack(spacing: 12) {
-                    Button(action: exportDiffPNG) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "arrow.down.doc")
-                            Text("Diff PNG")
-                        }
-                        .font(.system(size: 13, weight: .medium))
-                        .foregroundColor(.white.opacity(0.8))
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 10)
-                        .background(Color.white.opacity(0.1))
-                        .cornerRadius(8)
-                    }
-                    .buttonStyle(.plain)
+                HStack {
+                    Spacer()
                     
-                    Button(action: exportJSON) {
-                        HStack(spacing: 6) {
-                            Image(systemName: "arrow.down.doc")
-                            Text("Export JSON")
+                    Button(action: exportDiffPNG) {
+                        HStack(spacing: 8) {
+                            Image(systemName: "arrow.down.circle.fill")
+                                .font(.system(size: 14))
+                            Text("Save Diff PNG")
+                                .font(.system(size: 13, weight: .semibold))
                         }
-                        .font(.system(size: 13, weight: .medium))
                         .foregroundColor(.white)
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 10)
-                        .background(Color(hex: "ff6b35"))
-                        .cornerRadius(8)
+                        .padding(.horizontal, 20)
+                        .padding(.vertical, 12)
+                        .background(
+                            LinearGradient(
+                                colors: [Color(hex: "ff6b35"), Color(hex: "e55a2b")],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .cornerRadius(10)
+                        .shadow(color: Color(hex: "ff6b35").opacity(0.3), radius: 8, y: 4)
                     }
                     .buttonStyle(.plain)
                 }
-                .frame(maxWidth: .infinity, alignment: .trailing)
                 .padding(16)
                 .background(Color.white.opacity(0.03))
             }
@@ -112,18 +103,6 @@ struct ResultsView: View {
         let savePanel = NSSavePanel()
         savePanel.allowedContentTypes = [.png]
         savePanel.nameFieldStringValue = "design-diff.png"
-        
-        if savePanel.runModal() == .OK, let destination = savePanel.url {
-            try? FileManager.default.copyItem(at: url, to: destination)
-        }
-    }
-    
-    private func exportJSON() {
-        guard let url = appState.exportJSON() else { return }
-        
-        let savePanel = NSSavePanel()
-        savePanel.allowedContentTypes = [.json]
-        savePanel.nameFieldStringValue = "design-diff-analysis.json"
         
         if savePanel.runModal() == .OK, let destination = savePanel.url {
             try? FileManager.default.copyItem(at: url, to: destination)
@@ -156,241 +135,221 @@ struct TabButton: View {
     }
 }
 
-// MARK: - Summary Tab
+// MARK: - Annotations Tab
 
-struct SummaryTabView: View {
+struct AnnotationsTabView: View {
     @EnvironmentObject var appState: AppState
     @Binding var copiedId: String?
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack {
-                Text("Change Summary")
+                Text("Design Changes")
                     .font(.system(size: 18, weight: .semibold))
                     .foregroundColor(.white)
                 
                 Spacer()
                 
                 CopyButton(
-                    text: appState.analysisResult?.changeSummary.map { "• \($0)" }.joined(separator: "\n") ?? "",
-                    id: "summary",
+                    text: appState.editableAnnotations.enumerated().map { "(\($0.offset + 1)) \($0.element.description)" }.joined(separator: "\n"),
+                    id: "annotations",
                     copiedId: $copiedId
                 )
             }
             
-            if let summary = appState.analysisResult?.changeSummary {
+            if appState.editableAnnotations.isEmpty {
+                VStack(spacing: 12) {
+                    Image(systemName: "plus.circle.dashed")
+                        .font(.system(size: 40))
+                        .foregroundColor(.white.opacity(0.3))
+                    Text("No annotations yet")
+                        .font(.system(size: 14))
+                        .foregroundColor(.white.opacity(0.5))
+                    Text("Click 'Add' button and click on the image to add annotations")
+                        .font(.system(size: 12))
+                        .foregroundColor(.white.opacity(0.3))
+                        .multilineTextAlignment(.center)
+                }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 40)
+            } else {
                 VStack(spacing: 8) {
-                    ForEach(Array(summary.enumerated()), id: \.offset) { index, change in
-                        HStack(alignment: .top, spacing: 12) {
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundColor(Color(hex: "ff6b35"))
-                                .frame(width: 16, height: 16)
-                                .padding(.top, 2)
-                            
-                            Text(change)
-                                .font(.system(size: 14))
-                                .foregroundColor(.white.opacity(0.85))
-                            
-                            Spacer()
-                        }
-                        .padding(12)
-                        .background(Color.white.opacity(0.03))
-                        .cornerRadius(10)
-                    }
-                }
-            }
-        }
-    }
-}
-
-// MARK: - Spec Tab
-
-struct SpecTabView: View {
-    @EnvironmentObject var appState: AppState
-    @Binding var copiedId: String?
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 20) {
-            HStack {
-                Text("Developer Spec")
-                    .font(.system(size: 18, weight: .semibold))
-                    .foregroundColor(.white)
-                
-                Spacer()
-                
-                CopyButton(
-                    text: formatDevSpec(),
-                    id: "spec",
-                    copiedId: $copiedId
-                )
-            }
-            
-            if let spec = appState.analysisResult?.developerSpec {
-                // Components
-                ForEach(spec.components) { component in
-                    ComponentSpecCard(component: component)
-                }
-                
-                // Layout
-                if !spec.layout.isEmpty {
-                    VStack(alignment: .leading, spacing: 12) {
-                        HStack(spacing: 8) {
-                            Image(systemName: "square.grid.2x2")
-                                .font(.system(size: 12))
-                                .foregroundColor(Color(hex: "2dd4bf"))
-                            
-                            Text("Layout")
-                                .font(.system(size: 14, weight: .semibold))
-                                .foregroundColor(.white.opacity(0.9))
-                        }
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(Color.white.opacity(0.03))
-                        
-                        VStack(spacing: 4) {
-                            ForEach(spec.layout) { item in
-                                HStack {
-                                    Text(item.property)
-                                        .font(.system(size: 12, design: .monospaced))
-                                        .foregroundColor(.white.opacity(0.5))
-                                        .frame(width: 150, alignment: .leading)
-                                    
-                                    Text(item.value)
-                                        .font(.system(size: 12, design: .monospaced))
-                                        .foregroundColor(Color(hex: "2dd4bf"))
-                                }
-                                .padding(.horizontal, 12)
-                                .padding(.vertical, 4)
+                    ForEach(Array(appState.editableAnnotations.enumerated()), id: \.element.id) { index, annotation in
+                        AnnotationRow(
+                            annotation: annotation,
+                            number: index + 1,
+                            isSelected: appState.selectedAnnotationId == annotation.id,
+                            onSelect: {
+                                appState.selectedAnnotationId = annotation.id
+                            },
+                            onUpdate: { newDescription in
+                                appState.updateAnnotationDescription(id: annotation.id, description: newDescription)
+                            },
+                            onDelete: {
+                                appState.deleteAnnotation(id: annotation.id)
                             }
-                        }
-                        .padding(.vertical, 8)
+                        )
                     }
-                    .background(Color.white.opacity(0.02))
-                    .cornerRadius(12)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.white.opacity(0.08), lineWidth: 1)
-                    )
                 }
             }
         }
     }
-    
-    private func formatDevSpec() -> String {
-        guard let spec = appState.analysisResult?.developerSpec else { return "" }
-        
-        var output = ""
-        
-        for comp in spec.components {
-            output += "## \(comp.name)\n"
-            for (key, value) in comp.properties.sorted(by: { $0.key < $1.key }) {
-                output += "- \(key): \(value)\n"
-            }
-            output += "\n"
-        }
-        
-        if !spec.layout.isEmpty {
-            output += "## Layout\n"
-            for item in spec.layout {
-                output += "- \(item.property): \(item.value)\n"
-            }
-        }
-        
-        return output.trimmingCharacters(in: .whitespacesAndNewlines)
-    }
 }
 
-struct ComponentSpecCard: View {
-    let component: ComponentSpec
+struct AnnotationRow: View {
+    let annotation: EditableAnnotation
+    let number: Int
+    let isSelected: Bool
+    let onSelect: () -> Void
+    let onUpdate: (String) -> Void
+    let onDelete: () -> Void
+    
+    @State private var isEditing: Bool = false
+    @State private var editText: String = ""
+    @FocusState private var isFocused: Bool
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 0) {
-            HStack(spacing: 8) {
-                Image(systemName: "cube")
-                    .font(.system(size: 12))
-                    .foregroundColor(Color(hex: "ff6b35"))
-                
-                Text(component.name)
-                    .font(.system(size: 14, weight: .semibold))
-                    .foregroundColor(.white.opacity(0.9))
-            }
-            .padding(.horizontal, 12)
-            .padding(.vertical, 10)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.white.opacity(0.03))
-            
-            VStack(spacing: 4) {
-                ForEach(component.properties.sorted(by: { $0.key < $1.key }), id: \.key) { key, value in
-                    HStack {
-                        Text(key)
-                            .font(.system(size: 12, design: .monospaced))
-                            .foregroundColor(.white.opacity(0.5))
-                            .frame(width: 150, alignment: .leading)
-                        
-                        Text(value)
-                            .font(.system(size: 12, design: .monospaced))
-                            .foregroundColor(Color(hex: "2dd4bf"))
-                    }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 4)
-                }
-            }
-            .padding(.vertical, 8)
-        }
-        .background(Color.white.opacity(0.02))
-        .cornerRadius(12)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.white.opacity(0.08), lineWidth: 1)
-        )
-    }
-}
-
-// MARK: - Tasks Tab
-
-struct TasksTabView: View {
-    @EnvironmentObject var appState: AppState
-    @Binding var copiedId: String?
-    
-    var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
-            HStack {
-                Text("Actionable Tasks")
-                    .font(.system(size: 18, weight: .semibold))
+        VStack(spacing: 0) {
+            HStack(alignment: .top, spacing: 12) {
+                // Number badge
+                Text("\(number)")
+                    .font(.system(size: 12, weight: .bold))
                     .foregroundColor(.white)
+                    .frame(width: 24, height: 24)
+                    .background(Color(hex: "ff6b35"))
+                    .clipShape(Circle())
                 
-                Spacer()
-                
-                CopyButton(
-                    text: appState.analysisResult?.actionableTasks.map { "- [ ] \($0)" }.joined(separator: "\n") ?? "",
-                    id: "tasks",
-                    copiedId: $copiedId
-                )
-            }
-            
-            if let tasks = appState.analysisResult?.actionableTasks {
-                VStack(spacing: 8) {
-                    ForEach(Array(tasks.enumerated()), id: \.offset) { _, task in
-                        HStack(alignment: .top, spacing: 12) {
-                            RoundedRectangle(cornerRadius: 4)
-                                .stroke(Color.white.opacity(0.3), lineWidth: 1.5)
-                                .frame(width: 18, height: 18)
-                                .padding(.top, 1)
+                // Description (editable)
+                if isEditing {
+                    VStack(alignment: .leading, spacing: 8) {
+                        TextField("Enter description", text: $editText)
+                            .textFieldStyle(.plain)
+                            .font(.system(size: 14))
+                            .foregroundColor(.white)
+                            .padding(8)
+                            .background(Color.white.opacity(0.05))
+                            .cornerRadius(6)
+                            .focused($isFocused)
+                            .onAppear {
+                                editText = annotation.description
+                                isFocused = true
+                            }
+                        
+                        // Save/Cancel buttons
+                        HStack(spacing: 8) {
+                            Button(action: {
+                                editText = annotation.description
+                                isEditing = false
+                            }) {
+                                Text("Cancel")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundColor(.white.opacity(0.6))
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .background(Color.white.opacity(0.05))
+                                    .cornerRadius(6)
+                            }
+                            .buttonStyle(.plain)
                             
-                            Text(task)
-                                .font(.system(size: 14))
-                                .foregroundColor(.white.opacity(0.85))
+                            Button(action: {
+                                onUpdate(editText)
+                                isEditing = false
+                            }) {
+                                Text("Save")
+                                    .font(.system(size: 12, weight: .medium))
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 12)
+                                    .padding(.vertical, 6)
+                                    .background(Color(hex: "ff6b35"))
+                                    .cornerRadius(6)
+                            }
+                            .buttonStyle(.plain)
+                            .disabled(editText.trimmingCharacters(in: .whitespaces).isEmpty)
+                            .opacity(editText.trimmingCharacters(in: .whitespaces).isEmpty ? 0.5 : 1.0)
                             
                             Spacer()
                         }
-                        .padding(12)
-                        .background(Color.white.opacity(0.03))
-                        .cornerRadius(10)
+                    }
+                } else {
+                    Text(annotation.description)
+                        .font(.system(size: 14))
+                        .foregroundColor(.white.opacity(0.85))
+                        .frame(maxWidth: .infinity, alignment: .leading)
+                        .onTapGesture(count: 2) {
+                            isEditing = true
+                        }
+                        .onTapGesture {
+                            onSelect()
+                        }
+                    
+                    Spacer()
+                    
+                    // Actions (only show when not editing)
+                    HStack(spacing: 4) {
+                        Button(action: {
+                            editText = annotation.description
+                            isEditing = true
+                        }) {
+                            Image(systemName: "pencil")
+                                .font(.system(size: 11))
+                                .foregroundColor(.white.opacity(0.5))
+                                .frame(width: 24, height: 24)
+                                .background(Color.white.opacity(0.05))
+                                .cornerRadius(4)
+                        }
+                        .buttonStyle(.plain)
+                        
+                        Button(action: onDelete) {
+                            Image(systemName: "trash")
+                                .font(.system(size: 11))
+                                .foregroundColor(.red.opacity(0.7))
+                                .frame(width: 24, height: 24)
+                                .background(Color.white.opacity(0.05))
+                                .cornerRadius(4)
+                        }
+                        .buttonStyle(.plain)
                     }
                 }
             }
+            .padding(12)
+            
+            // Editing mode indicator
+            if isEditing {
+                HStack(spacing: 6) {
+                    Image(systemName: "pencil.circle.fill")
+                        .font(.system(size: 10))
+                        .foregroundColor(Color(hex: "ff6b35"))
+                    Text("Editing mode")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundColor(Color(hex: "ff6b35"))
+                    Spacer()
+                }
+                .padding(.horizontal, 12)
+                .padding(.bottom, 8)
+            }
         }
+        .background(
+            Group {
+                if isEditing {
+                    Color(hex: "ff6b35").opacity(0.15)
+                } else if isSelected {
+                    Color(hex: "ff6b35").opacity(0.1)
+                } else {
+                    Color.white.opacity(0.03)
+                }
+            }
+        )
+        .cornerRadius(10)
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(
+                    isEditing ? Color(hex: "ff6b35").opacity(0.8) :
+                    isSelected ? Color(hex: "ff6b35").opacity(0.5) :
+                    Color.clear,
+                    lineWidth: isEditing ? 2 : 1
+                )
+        )
+        .animation(.easeInOut(duration: 0.2), value: isEditing)
     }
 }
 
@@ -399,6 +358,15 @@ struct TasksTabView: View {
 struct SlackTabView: View {
     @EnvironmentObject var appState: AppState
     @Binding var copiedId: String?
+    
+    private var slackContent: String {
+        var content = "🎨 *Design Update Summary*\n\n*Visual Changes:*\n"
+        for (index, annotation) in appState.editableAnnotations.enumerated() {
+            content += "(\(index + 1)) \(annotation.description)\n"
+        }
+        content += "\n_Generated by DesignDiff_ ✨"
+        return content
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -416,26 +384,46 @@ struct SlackTabView: View {
                 Spacer()
                 
                 CopyButton(
-                    text: appState.analysisResult?.slackFormat ?? "",
+                    text: slackContent,
                     id: "slack",
                     label: "Copy for Slack",
                     copiedId: $copiedId
                 )
             }
             
-            if let slackFormat = appState.analysisResult?.slackFormat {
-                Text(slackFormat)
+            VStack(alignment: .leading, spacing: 12) {
+                Text("🎨 *Design Update Summary*")
                     .font(.system(size: 13, design: .monospaced))
-                    .foregroundColor(.white.opacity(0.8))
-                    .padding(16)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.white.opacity(0.03))
-                    .cornerRadius(12)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.white.opacity(0.08), lineWidth: 1)
-                    )
+                    .foregroundColor(.white.opacity(0.9))
+                
+                Text("*Visual Changes:*")
+                    .font(.system(size: 13, design: .monospaced))
+                    .foregroundColor(.white.opacity(0.9))
+                
+                ForEach(Array(appState.editableAnnotations.enumerated()), id: \.element.id) { index, annotation in
+                    HStack(alignment: .top, spacing: 8) {
+                        Text("(\(index + 1))")
+                            .font(.system(size: 13, weight: .bold, design: .monospaced))
+                            .foregroundColor(Color(hex: "ff6b35"))
+                        Text(annotation.description)
+                            .font(.system(size: 13, design: .monospaced))
+                            .foregroundColor(.white.opacity(0.8))
+                    }
+                }
+                
+                Text("_Generated by DesignDiff_ ✨")
+                    .font(.system(size: 13, design: .monospaced))
+                    .foregroundColor(.white.opacity(0.6))
+                    .padding(.top, 8)
             }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.white.opacity(0.03))
+            .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.white.opacity(0.08), lineWidth: 1)
+            )
         }
     }
 }
@@ -445,6 +433,15 @@ struct SlackTabView: View {
 struct LinearTabView: View {
     @EnvironmentObject var appState: AppState
     @Binding var copiedId: String?
+    
+    private var linearContent: String {
+        var content = "## Design Diff Analysis\n\n### Visual Changes\n"
+        for (index, annotation) in appState.editableAnnotations.enumerated() {
+            content += "(\(index + 1)) \(annotation.description)\n"
+        }
+        content += "\n### Developer Notes\nSee attached images for visual reference."
+        return content
+    }
     
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -462,26 +459,51 @@ struct LinearTabView: View {
                 Spacer()
                 
                 CopyButton(
-                    text: appState.analysisResult?.linearFormat ?? "",
+                    text: linearContent,
                     id: "linear",
                     label: "Copy for Linear",
                     copiedId: $copiedId
                 )
             }
             
-            if let linearFormat = appState.analysisResult?.linearFormat {
-                Text(linearFormat)
+            VStack(alignment: .leading, spacing: 12) {
+                Text("## Design Diff Analysis")
+                    .font(.system(size: 14, weight: .bold, design: .monospaced))
+                    .foregroundColor(.white.opacity(0.9))
+                
+                Text("### Visual Changes")
+                    .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                    .foregroundColor(.white.opacity(0.9))
+                    .padding(.top, 4)
+                
+                ForEach(Array(appState.editableAnnotations.enumerated()), id: \.element.id) { index, annotation in
+                    HStack(alignment: .top, spacing: 8) {
+                        Text("(\(index + 1))")
+                            .font(.system(size: 13, weight: .bold, design: .monospaced))
+                            .foregroundColor(Color(hex: "ff6b35"))
+                        Text(annotation.description)
+                            .font(.system(size: 13, design: .monospaced))
+                            .foregroundColor(.white.opacity(0.8))
+                    }
+                }
+                
+                Text("### Developer Notes")
+                    .font(.system(size: 13, weight: .semibold, design: .monospaced))
+                    .foregroundColor(.white.opacity(0.9))
+                    .padding(.top, 8)
+                
+                Text("See attached images for visual reference.")
                     .font(.system(size: 13, design: .monospaced))
-                    .foregroundColor(.white.opacity(0.8))
-                    .padding(16)
-                    .frame(maxWidth: .infinity, alignment: .leading)
-                    .background(Color.white.opacity(0.03))
-                    .cornerRadius(12)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 12)
-                            .stroke(Color.white.opacity(0.08), lineWidth: 1)
-                    )
+                    .foregroundColor(.white.opacity(0.6))
             }
+            .padding(16)
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color.white.opacity(0.03))
+            .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.white.opacity(0.08), lineWidth: 1)
+            )
         }
     }
 }
@@ -527,11 +549,9 @@ struct CopyButton: View {
         .environmentObject({
             let state = AppState()
             state.analysisResult = AnalysisResult.mock
+            state.initializeEditableAnnotations()
             return state
         }())
         .frame(width: 1200, height: 800)
         .background(Color(hex: "0a0a0b"))
 }
-
-
-

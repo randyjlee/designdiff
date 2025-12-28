@@ -3,6 +3,36 @@ import AppKit
 
 // MARK: - Analysis Result Models
 
+// Editable annotation for user interaction
+struct EditableAnnotation: Identifiable, Equatable {
+    let id: UUID
+    var description: String
+    var x: Double  // 0.0 ~ 1.0 (percentage from left)
+    var y: Double  // 0.0 ~ 1.0 (percentage from top)
+    
+    init(id: UUID = UUID(), description: String, x: Double, y: Double) {
+        self.id = id
+        self.description = description
+        self.x = x
+        self.y = y
+    }
+    
+    init(from annotation: ChangeAnnotation) {
+        self.id = UUID()
+        self.description = annotation.description
+        self.x = annotation.x
+        self.y = annotation.y
+    }
+}
+
+// Original annotation from AI (Codable)
+struct ChangeAnnotation: Codable, Identifiable {
+    var id: String { description }
+    let description: String
+    let x: Double  // 0.0 ~ 1.0 (percentage from left)
+    let y: Double  // 0.0 ~ 1.0 (percentage from top)
+}
+
 struct ComponentSpec: Codable, Identifiable {
     var id: String { name }
     let name: String
@@ -21,11 +51,16 @@ struct DeveloperSpec: Codable {
 }
 
 struct AnalysisResult: Codable {
-    let changeSummary: [String]
+    let changeAnnotations: [ChangeAnnotation]
     let developerSpec: DeveloperSpec
     let actionableTasks: [String]
     let slackFormat: String
     let linearFormat: String
+    
+    // Computed property for backward compatibility
+    var changeSummary: [String] {
+        changeAnnotations.map { $0.description }
+    }
 }
 
 // MARK: - Diff Result
@@ -52,14 +87,14 @@ enum AnalysisStatus: Equatable {
 extension AnalysisResult {
     static var mock: AnalysisResult {
         AnalysisResult(
-            changeSummary: [
-                "Primary button height increased (44px → 48px)",
-                "Button border radius changed (8px → 12px)",
-                "Primary color updated (#2D6BFF → #1F5BFF)",
-                "Card shadow increased for more elevation",
-                "Header text weight changed (500 → 600)",
-                "Section spacing increased (16px → 24px)",
-                "Input field border color lightened"
+            changeAnnotations: [
+                ChangeAnnotation(description: "Header text weight changed (500 → 600)", x: 0.28, y: 0.15),
+                ChangeAnnotation(description: "Primary color updated (#2D6BFF → #1F5BFF)", x: 0.72, y: 0.3),
+                ChangeAnnotation(description: "Input field border color lightened", x: 0.28, y: 0.45),
+                ChangeAnnotation(description: "Card shadow increased for more elevation", x: 0.72, y: 0.5),
+                ChangeAnnotation(description: "Section spacing increased (16px → 24px)", x: 0.28, y: 0.6),
+                ChangeAnnotation(description: "Primary button height increased (44px → 48px)", x: 0.72, y: 0.85),
+                ChangeAnnotation(description: "Button border radius changed (8px → 12px)", x: 0.28, y: 0.88)
             ],
             developerSpec: DeveloperSpec(
                 components: [
@@ -151,6 +186,7 @@ extension AnalysisResult {
         )
     }
 }
+
 
 
 

@@ -13,9 +13,9 @@ class AppState: ObservableObject {
     @Published var analysisResult: AnalysisResult?
     @Published var status: AnalysisStatus = .idle
     
-    // MARK: - Settings
-    
-    @AppStorage("openAIAPIKey") var apiKey: String = ""
+    // Editable annotations (user can modify these)
+    @Published var editableAnnotations: [EditableAnnotation] = []
+    @Published var selectedAnnotationId: UUID?
     
     // MARK: - Services
     
@@ -47,6 +47,8 @@ class AppState: ObservableObject {
     func reset() {
         diffResult = nil
         analysisResult = nil
+        editableAnnotations = []
+        selectedAnnotationId = nil
         status = .idle
     }
     
@@ -54,6 +56,43 @@ class AppState: ObservableObject {
         beforeImage = nil
         afterImage = nil
         reset()
+    }
+    
+    // MARK: - Annotation Management
+    
+    func initializeEditableAnnotations() {
+        guard let result = analysisResult else { return }
+        editableAnnotations = result.changeAnnotations.map { EditableAnnotation(from: $0) }
+    }
+    
+    func updateAnnotationPosition(id: UUID, x: Double, y: Double) {
+        if let index = editableAnnotations.firstIndex(where: { $0.id == id }) {
+            editableAnnotations[index].x = min(max(x, 0.05), 0.95)
+            editableAnnotations[index].y = min(max(y, 0.05), 0.95)
+        }
+    }
+    
+    func updateAnnotationDescription(id: UUID, description: String) {
+        if let index = editableAnnotations.firstIndex(where: { $0.id == id }) {
+            editableAnnotations[index].description = description
+        }
+    }
+    
+    func addAnnotation(at x: Double, y: Double) {
+        let newAnnotation = EditableAnnotation(
+            description: "New annotation",
+            x: min(max(x, 0.05), 0.95),
+            y: min(max(y, 0.05), 0.95)
+        )
+        editableAnnotations.append(newAnnotation)
+        selectedAnnotationId = newAnnotation.id
+    }
+    
+    func deleteAnnotation(id: UUID) {
+        editableAnnotations.removeAll { $0.id == id }
+        if selectedAnnotationId == id {
+            selectedAnnotationId = nil
+        }
     }
     
     func pasteImageFromClipboard() {
@@ -107,11 +146,11 @@ class AppState: ObservableObject {
             let analysis = try await openAIService.analyzeImages(
                 before: before,
                 after: after,
-                diff: diff.diffImage,
-                apiKey: apiKey
+                diff: diff.diffImage
             )
             
             analysisResult = analysis
+            initializeEditableAnnotations()
             status = .complete
             
         } catch {
@@ -120,23 +159,6 @@ class AppState: ObservableObject {
     }
     
     // MARK: - Export Functions
-    
-    func exportJSON() -> URL? {
-        guard let analysis = analysisResult else { return nil }
-        
-        let encoder = JSONEncoder()
-        encoder.outputFormatting = [.prettyPrinted, .sortedKeys]
-        
-        do {
-            let data = try encoder.encode(analysis)
-            let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("design-diff-analysis.json")
-            try data.write(to: tempURL)
-            return tempURL
-        } catch {
-            print("Failed to export JSON: \(error)")
-            return nil
-        }
-    }
     
     func exportDiffImage() -> URL? {
         guard let diffImage = diffResult?.diffImage else { return nil }

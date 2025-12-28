@@ -2,33 +2,21 @@ import SwiftUI
 
 struct ImageComparisonView: View {
     @EnvironmentObject var appState: AppState
-    private let annotationPositions: [CGPoint] = [
-        CGPoint(x: 0.2, y: 0.3),
-        CGPoint(x: 0.65, y: 0.25),
-        CGPoint(x: 0.4, y: 0.65),
-        CGPoint(x: 0.75, y: 0.6)
-    ]
+    @State private var isAddMode: Bool = false
 
     var body: some View {
         VStack(spacing: 0) {
             comparisonHeader
-            HStack(alignment: .top, spacing: 16) {
+            
+            HStack(alignment: .top, spacing: 20) {
                 ComparisonFrame(title: "Before", image: appState.beforeImage)
-                AfterComparisonFrame(
-                    image: appState.afterImage,
-                    annotations: appState.analysisResult?.changeSummary ?? [],
-                    positions: annotationPositions
-                )
+                AnnotatableAfterFrame(isAddMode: $isAddMode)
             }
-            .padding(.horizontal, 16)
+            .padding(.horizontal, 20)
+            .padding(.top, 16)
+            .padding(.bottom, 20)
             .frame(maxWidth: .infinity)
-
-            if let summary = appState.analysisResult?.changeSummary, !summary.isEmpty {
-                ChangeAnnotationPanel(entries: summary)
-                    .padding(.horizontal, 16)
-            }
         }
-        .padding(.top, 0)
         .background(Color.white.opacity(0.02))
     }
 
@@ -41,7 +29,9 @@ struct ImageComparisonView: View {
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundColor(.white)
             }
+            
             Spacer()
+            
             if let diff = appState.diffResult {
                 Text("Change: \(String(format: "%.2f%%", diff.diffPercentage))")
                     .font(.system(size: 13, weight: .medium, design: .monospaced))
@@ -49,7 +39,7 @@ struct ImageComparisonView: View {
             }
         }
         .padding(.horizontal, 16)
-        .padding(.vertical, 10)
+        .padding(.vertical, 12)
         .background(Color.white.opacity(0.03))
     }
 
@@ -64,27 +54,62 @@ struct ImageComparisonView: View {
     }
 }
 
+// Checkerboard pattern for transparency
+struct CheckerboardBackground: View {
+    let squareSize: CGFloat = 8
+    let lightColor = Color(white: 0.25)
+    let darkColor = Color(white: 0.2)
+    
+    var body: some View {
+        Canvas { context, size in
+            let columns = Int(ceil(size.width / squareSize))
+            let rows = Int(ceil(size.height / squareSize))
+            
+            for row in 0..<rows {
+                for col in 0..<columns {
+                    let isLight = (row + col) % 2 == 0
+                    let rect = CGRect(
+                        x: CGFloat(col) * squareSize,
+                        y: CGFloat(row) * squareSize,
+                        width: squareSize,
+                        height: squareSize
+                    )
+                    context.fill(
+                        Path(rect),
+                        with: .color(isLight ? lightColor : darkColor)
+                    )
+                }
+            }
+        }
+    }
+}
+
 struct ComparisonFrame: View {
     let title: String
     let image: NSImage?
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(title)
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundColor(.white.opacity(0.8))
+            HStack {
+                Text(title)
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.8))
+                Spacer()
+            }
             ZStack {
-                RoundedRectangle(cornerRadius: 18)
-                    .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                    .background(
-                        RoundedRectangle(cornerRadius: 18)
-                            .fill(Color.black.opacity(0.3))
-                    )
+                // Checkerboard background
+                CheckerboardBackground()
+                    .clipShape(RoundedRectangle(cornerRadius: 16))
+                
+                // Border
+                RoundedRectangle(cornerRadius: 16)
+                    .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                
                 if let image = image {
                     Image(nsImage: image)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .padding(12)
+                        .padding(16)
                 } else {
                     Text("No image")
                         .foregroundColor(.white.opacity(0.4))
@@ -96,42 +121,85 @@ struct ComparisonFrame: View {
     }
 }
 
-struct AfterComparisonFrame: View {
-    let image: NSImage?
-    let annotations: [String]
-    let positions: [CGPoint]
+struct AnnotatableAfterFrame: View {
+    @EnvironmentObject var appState: AppState
+    @Binding var isAddMode: Bool
+    @State private var frameSize: CGSize = .zero
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text("After")
-                .font(.system(size: 12, weight: .semibold))
-                .foregroundColor(.white.opacity(0.8))
+            HStack(spacing: 8) {
+                Text("After")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundColor(.white.opacity(0.8))
+                
+                // Add button
+                Button(action: { isAddMode.toggle() }) {
+                    Image(systemName: isAddMode ? "xmark.circle.fill" : "plus.circle.fill")
+                        .font(.system(size: 16))
+                        .foregroundColor(isAddMode ? .white.opacity(0.6) : Color(hex: "ff6b35"))
+                }
+                .buttonStyle(.plain)
+                .help(isAddMode ? "Cancel" : "Add annotation")
+                
+                Spacer()
+                
+                if isAddMode {
+                    Text("Click to add")
+                        .font(.system(size: 11))
+                        .foregroundColor(Color(hex: "ff6b35").opacity(0.8))
+                }
+            }
+            
             GeometryReader { geometry in
                 ZStack {
-                    RoundedRectangle(cornerRadius: 18)
-                        .stroke(Color.white.opacity(0.1), lineWidth: 1)
-                        .background(
-                            RoundedRectangle(cornerRadius: 18)
-                                .fill(Color.black.opacity(0.3))
-                        )
-                    if let image = image {
+                    // Checkerboard background
+                    CheckerboardBackground()
+                        .clipShape(RoundedRectangle(cornerRadius: 16))
+                    
+                    // Border
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(isAddMode ? Color(hex: "ff6b35").opacity(0.6) : Color.white.opacity(0.08), lineWidth: isAddMode ? 2 : 1)
+                    
+                    if let image = appState.afterImage {
                         Image(nsImage: image)
                             .resizable()
                             .aspectRatio(contentMode: .fit)
-                            .padding(12)
+                            .padding(16)
                     }
-                    ForEach(Array(annotations.enumerated()), id: \.offset) { index, _ in
-                        if !positions.isEmpty {
-                            let anchor = positions[index % positions.count]
-                            let clampedX = min(max(anchor.x, 0.05), 0.95)
-                            let clampedY = min(max(anchor.y, 0.05), 0.95)
-                            AnnotationBadge(number: index + 1)
-                                .position(
-                                    x: geometry.size.width * clampedX,
-                                    y: geometry.size.height * clampedY
-                                )
-                        }
+                    
+                    // Draggable annotations
+                    ForEach(Array(appState.editableAnnotations.enumerated()), id: \.element.id) { index, annotation in
+                        DraggableAnnotationBadge(
+                            annotation: annotation,
+                            number: index + 1,
+                            frameSize: geometry.size,
+                            isSelected: appState.selectedAnnotationId == annotation.id,
+                            onSelect: {
+                                appState.selectedAnnotationId = annotation.id
+                            },
+                            onDrag: { newX, newY in
+                                appState.updateAnnotationPosition(id: annotation.id, x: newX, y: newY)
+                            },
+                            onDelete: {
+                                appState.deleteAnnotation(id: annotation.id)
+                            }
+                        )
                     }
+                }
+                .contentShape(Rectangle())
+                .onTapGesture { location in
+                    if isAddMode {
+                        let x = location.x / geometry.size.width
+                        let y = location.y / geometry.size.height
+                        appState.addAnnotation(at: x, y: y)
+                        isAddMode = false
+                    } else {
+                        appState.selectedAnnotationId = nil
+                    }
+                }
+                .onAppear {
+                    frameSize = geometry.size
                 }
             }
             .frame(height: 540)
@@ -140,61 +208,77 @@ struct AfterComparisonFrame: View {
     }
 }
 
-struct AnnotationBadge: View {
+struct DraggableAnnotationBadge: View {
+    let annotation: EditableAnnotation
     let number: Int
+    let frameSize: CGSize
+    let isSelected: Bool
+    let onSelect: () -> Void
+    let onDrag: (Double, Double) -> Void
+    let onDelete: () -> Void
+    
+    @State private var isDragging = false
 
     var body: some View {
-        Text("\(number)")
-            .font(.system(size: 12, weight: .bold))
-            .foregroundColor(.white)
-            .frame(width: 28, height: 28)
-            .background(Color(hex: "ff6b35"))
-            .clipShape(Circle())
-            .shadow(color: .black.opacity(0.4), radius: 6, y: 3)
-    }
-}
-
-struct ChangeAnnotationPanel: View {
-    let entries: [String]
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Text("Visual change annotations")
-                    .font(.system(size: 13, weight: .semibold))
-                    .foregroundColor(.white)
-                Spacer()
-                Image(systemName: "list.number")
-                    .foregroundColor(Color(hex: "ff6b35"))
-            }
-
-            ForEach(Array(entries.enumerated()), id: \.offset) { index, change in
-                HStack(alignment: .top, spacing: 8) {
-                    Text("(\(index + 1))")
-                        .font(.system(size: 12, weight: .bold, design: .monospaced))
-                        .foregroundColor(Color(hex: "ff6b35"))
-                        .frame(width: 28, alignment: .trailing)
-
-                    Text(change)
-                        .font(.system(size: 12))
-                        .foregroundColor(.white.opacity(0.9))
+        ZStack {
+            // Badge
+            Text("\(number)")
+                .font(.system(size: 9, weight: .bold))
+                .foregroundColor(.white)
+                .frame(width: 20, height: 20)
+                .background(
+                    Circle()
+                        .fill(Color(hex: "ff6b35"))
+                        .shadow(color: .black.opacity(0.4), radius: isDragging ? 8 : 4, y: isDragging ? 4 : 2)
+                )
+                .overlay(
+                    Circle()
+                        .stroke(isSelected ? Color.white : Color.clear, lineWidth: 1.5)
+                )
+                .scaleEffect(isDragging ? 1.2 : 1.0)
+            
+            // Delete button (shown when selected)
+            if isSelected {
+                Button(action: onDelete) {
+                    Image(systemName: "xmark")
+                        .font(.system(size: 6, weight: .bold))
+                        .foregroundColor(.white)
+                        .frame(width: 12, height: 12)
+                        .background(Color.red)
+                        .clipShape(Circle())
                 }
-                .padding(.vertical, 6)
+                .buttonStyle(.plain)
+                .offset(x: 10, y: -10)
             }
         }
-        .padding(12)
-        .background(Color.white.opacity(0.03))
-        .cornerRadius(12)
-        .overlay(
-            RoundedRectangle(cornerRadius: 12)
-                .stroke(Color.white.opacity(0.1), lineWidth: 1)
+        .position(
+            x: frameSize.width * annotation.x,
+            y: frameSize.height * annotation.y
         )
+        .gesture(
+            DragGesture()
+                .onChanged { value in
+                    isDragging = true
+                    onSelect()
+                    let newX = value.location.x / frameSize.width
+                    let newY = value.location.y / frameSize.height
+                    onDrag(newX, newY)
+                }
+                .onEnded { _ in
+                    isDragging = false
+                }
+        )
+        .onTapGesture {
+            onSelect()
+        }
+        .animation(.spring(response: 0.3), value: isDragging)
+        .animation(.easeInOut(duration: 0.2), value: isSelected)
     }
 }
 
 #Preview {
     ImageComparisonView()
         .environmentObject(AppState())
-        .frame(width: 600, height: 500)
+        .frame(width: 800, height: 600)
         .background(Color(hex: "0a0a0b"))
 }
