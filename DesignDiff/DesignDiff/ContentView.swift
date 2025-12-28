@@ -103,7 +103,8 @@ struct HeaderView: View {
             }
             .buttonStyle(.plain)
         }
-        .padding(.horizontal, 24)
+        .padding(.leading, 80)  // Space for window controls (red, yellow, green buttons)
+        .padding(.trailing, 24)
         .padding(.vertical, 16)
         .frame(minWidth: 400)
     }
