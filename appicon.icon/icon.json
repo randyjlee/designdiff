@@ -1,0 +1,36 @@
+{
+  "fill" : {
+    "solid" : "srgb:0.83529,0.33333,0.00000,1.00000"
+  },
+  "groups" : [
+    {
+      "layers" : [
+        {
+          "image-name" : "Group 8 2.svg",
+          "name" : "Group 8 2",
+          "position" : {
+            "scale" : 2,
+            "translation-in-points" : [
+              -13.1015625,
+              0
+            ]
+          }
+        }
+      ],
+      "shadow" : {
+        "kind" : "neutral",
+        "opacity" : 0.5
+      },
+      "translucency" : {
+        "enabled" : true,
+        "value" : 0.5
+      }
+    }
+  ],
+  "supported-platforms" : {
+    "circles" : [
+      "watchOS"
+    ],
+    "squares" : "shared"
+  }
+}
