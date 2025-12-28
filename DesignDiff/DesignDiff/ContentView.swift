@@ -60,7 +60,7 @@ struct HeaderView: View {
     var body: some View {
         HStack(spacing: 16) {
             // Logo
-            HStack(spacing: 10) {
+            HStack(spacing: 0) {
                 Text("Design")
                     .font(.system(size: 22, weight: .bold))
                     .foregroundColor(.white)
@@ -69,8 +69,11 @@ struct HeaderView: View {
                     .font(.system(size: 22, weight: .bold))
                     .foregroundColor(Color(hex: "ff6b35"))
             }
+            .lineLimit(1)
+            .minimumScaleFactor(0.6)
+            .fixedSize(horizontal: false, vertical: true)
             
-            Spacer()
+            Spacer(minLength: 20)
             
             // New Analysis button (when showing results)
             if case .complete = appState.status {
@@ -102,6 +105,7 @@ struct HeaderView: View {
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 16)
+        .frame(minWidth: 400)
     }
 }
 
