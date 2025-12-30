@@ -59,9 +59,14 @@ fi
 
 echo ""
 echo "🔐 Step 1: Signing the app with Developer ID..."
+
+# Get script directory
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+ENTITLEMENTS_PATH="${SCRIPT_DIR}/../DesignDiff/DesignDiff/DesignDiff.entitlements"
+
 codesign --force --deep --sign "$DEVELOPER_ID" \
     --options runtime \
-    --entitlements "../DesignDiff/DesignDiff/DesignDiff.entitlements" \
+    --entitlements "$ENTITLEMENTS_PATH" \
     "$APP_PATH"
 
 echo "✅ App signed successfully"
