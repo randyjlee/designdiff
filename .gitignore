@@ -43,3 +43,10 @@ coverage/
 
 
 .env.notarization
+
+# Security files - DO NOT COMMIT
+*.certSigningRequest
+*.cer
+*password*.png
+*password*.jpg
+.env.notarization
