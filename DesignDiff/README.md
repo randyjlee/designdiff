@@ -26,10 +26,25 @@ AI-powered visual design diff tool for seamless designer-developer handoff. Nati
 4. Launch DesignDiff from Applications
 
 ### First Launch
-On first launch, you may see a security warning. To allow the app:
+If you see a security warning when opening the app:
+
+**Option 1: Right-click method (Easiest)**
+1. In Finder, locate `DesignDiff.app` in Applications
+2. **Right-click** (or Control+click) on the app
+3. Select **"Open"** from the context menu
+4. Click **"Open"** in the security dialog
+
+**Option 2: Terminal method**
+Open Terminal and run:
+```bash
+xattr -cr /Applications/DesignDiff.app
+```
+
+**Option 3: System Settings**
 1. Go to **System Settings** → **Privacy & Security**
-2. Scroll down and click **Open Anyway**
-3. Or run: `xattr -cr /Applications/DesignDiff.app` in Terminal
+2. Scroll down and click **"Open Anyway"** next to the DesignDiff message
+
+This happens because the app is not notarized by Apple. It's safe to use - the source code is open and available on GitHub.
 
 ## Usage
 

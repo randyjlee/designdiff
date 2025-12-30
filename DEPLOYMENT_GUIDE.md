@@ -213,25 +213,153 @@ xattr -cr /Applications/DesignDiff.app
 ```
 
 ### Notarization (공증)
-앱스토어 외부 배포 시 Apple 공증이 권장됩니다:
+
+Apple 공증은 앱스토어 외부 배포 시 필수는 아니지만 **강력히 권장**됩니다. 공증을 받으면 사용자가 앱을 처음 실행할 때 보안 경고가 표시되지 않습니다.
+
+#### 사전 준비
+
+1. **Apple Developer Program 가입** ($99/년)
+   - https://developer.apple.com/programs/enroll/
+
+2. **Developer ID Application 인증서 발급**
+   - https://developer.apple.com/account/resources/certificates/list
+   - '+' 클릭 → "Developer ID Application" 선택
+   - 인증서 다운로드 및 Keychain에 설치
+
+3. **App-Specific Password 생성**
+   - https://appleid.apple.com 로그인
+   - "Sign-In and Security" → "App-Specific Passwords"
+   - 새 비밀번호 생성 (예: "DesignDiff Notarization")
+   - 생성된 비밀번호 안전하게 보관 (한 번만 표시됨)
+
+4. **Team ID 확인**
+   - https://developer.apple.com/account
+   - 우측 상단 계정명 옆에 Team ID 표시
+
+#### 환경 변수 설정
 
 ```bash
-# 1. 아카이브 생성
-xcodebuild archive -scheme DesignDiff -archivePath build/DesignDiff.xcarchive
+# Apple ID (Developer 계정 이메일)
+export APPLE_ID="your@email.com"
 
-# 2. 공증용 내보내기
-xcodebuild -exportArchive -archivePath build/DesignDiff.xcarchive \
-  -exportPath build -exportOptionsPlist scripts/ExportOptions.plist
+# App-Specific Password
+export APPLE_ID_PASSWORD="xxxx-xxxx-xxxx-xxxx"
 
-# 3. 공증 제출
-xcrun notarytool submit build/DesignDiff.zip \
-  --apple-id "your@email.com" \
-  --password "app-specific-password" \
-  --team-id "TEAM_ID"
+# Team ID (10자리 영문자/숫자)
+export APPLE_TEAM_ID="XXXXXXXXXX"
 
-# 4. 스테이플링
-xcrun stapler staple build/DesignDiff.app
+# 선택사항: 환경 변수를 ~/.zshrc 또는 ~/.bash_profile에 추가
+echo 'export APPLE_ID="your@email.com"' >> ~/.zshrc
+echo 'export APPLE_ID_PASSWORD="xxxx-xxxx-xxxx-xxxx"' >> ~/.zshrc
+echo 'export APPLE_TEAM_ID="XXXXXXXXXX"' >> ~/.zshrc
 ```
+
+**보안 팁:** 비밀번호를 Keychain에 저장하려면:
+```bash
+security add-generic-password -a "$APPLE_ID" \
+  -w "your-app-specific-password" \
+  -s "notarization-password"
+
+# 사용할 때:
+export APPLE_ID_PASSWORD=$(security find-generic-password \
+  -s "notarization-password" -w)
+```
+
+#### 공증 실행
+
+**방법 1: 자동 스크립트 (권장)**
+
+```bash
+# 빌드 + 서명 + 공증 + DMG 생성 (한 번에)
+./scripts/notarize.sh
+```
+
+이 스크립트는 다음을 수행합니다:
+1. Developer ID 인증서로 앱 서명
+2. Hardened Runtime 활성화
+3. ZIP 아카이브 생성
+4. Apple에 공증 제출 및 대기
+5. 공증 티켓을 앱에 첨부 (stapling)
+6. 최종 DMG 생성
+
+**방법 2: 수동 실행**
+
+```bash
+# 1. 앱 빌드 (이미 완료됨)
+./scripts/create-dmg.sh
+
+# 2. Developer ID로 서명
+DEVELOPER_ID="Developer ID Application: Your Name (TEAMID)"
+codesign --force --deep --sign "$DEVELOPER_ID" \
+  --options runtime \
+  --entitlements DesignDiff/DesignDiff/DesignDiff.entitlements \
+  build/DesignDiff.app
+
+# 3. ZIP 생성
+cd build
+ditto -c -k --keepParent DesignDiff.app DesignDiff-1.0.0.zip
+
+# 4. 공증 제출 (5-10분 소요)
+xcrun notarytool submit DesignDiff-1.0.0.zip \
+  --apple-id "$APPLE_ID" \
+  --password "$APPLE_ID_PASSWORD" \
+  --team-id "$APPLE_TEAM_ID" \
+  --wait
+
+# 5. 공증 결과 확인 (선택사항)
+# 제출 시 받은 Submission ID 사용
+xcrun notarytool info <submission-id> \
+  --apple-id "$APPLE_ID" \
+  --password "$APPLE_ID_PASSWORD" \
+  --team-id "$APPLE_TEAM_ID"
+
+# 6. 공증 티켓 첨부
+xcrun stapler staple build/DesignDiff.app
+
+# 7. 검증
+xcrun stapler validate build/DesignDiff.app
+spctl -a -vvv -t install build/DesignDiff.app
+
+# 8. 최종 DMG 생성
+# (notarize.sh 스크립트가 자동으로 처리)
+```
+
+#### 공증 문제 해결
+
+**에러: "The executable does not have the hardened runtime enabled"**
+```bash
+# Hardened Runtime 옵션 추가 필요
+codesign --options runtime ...
+```
+
+**에러: "The signature does not include a secure timestamp"**
+```bash
+# 인터넷 연결 확인 (서명 시 타임스탬프 서버 접속 필요)
+```
+
+**공증 실패 시 자세한 로그 확인:**
+```bash
+xcrun notarytool log <submission-id> \
+  --apple-id "$APPLE_ID" \
+  --password "$APPLE_ID_PASSWORD" \
+  --team-id "$APPLE_TEAM_ID" \
+  developer_log.json
+
+cat developer_log.json
+```
+
+#### 공증 후 배포
+
+공증된 앱은:
+- ✅ macOS에서 경고 없이 실행 가능
+- ✅ Gatekeeper가 자동으로 신뢰
+- ✅ 사용자 경험 대폭 개선
+- ✅ 전문적이고 신뢰할 수 있는 인상
+
+**GitHub Release에 업로드:**
+1. 공증된 DMG를 릴리스에 업로드
+2. Appcast 재생성: `./scripts/generate-appcast.sh`
+3. `appcast.xml`도 함께 업로드
 
 ## 버전 관리 전략
 

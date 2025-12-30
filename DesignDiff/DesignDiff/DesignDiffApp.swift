@@ -1,4 +1,5 @@
 import SwiftUI
+import Sparkle
 
 @main
 struct DesignDiffApp: App {
@@ -28,7 +29,39 @@ struct DesignDiffApp: App {
     }
 }
 
-// Check for Updates menu item
+// MARK: - Update Manager
+
+class UpdateManager: ObservableObject {
+    private let updaterController: SPUStandardUpdaterController
+    
+    init() {
+        // Initialize Sparkle updater
+        updaterController = SPUStandardUpdaterController(
+            startingUpdater: true,
+            updaterDelegate: nil,
+            userDriverDelegate: nil
+        )
+    }
+    
+    /// Check for updates manually
+    func checkForUpdates() {
+        updaterController.checkForUpdates(nil)
+    }
+    
+    /// Get the updater for menu integration
+    var updater: SPUUpdater {
+        updaterController.updater
+    }
+    
+    /// Check if automatic update checking is enabled
+    var automaticallyChecksForUpdates: Bool {
+        get { updaterController.updater.automaticallyChecksForUpdates }
+        set { updaterController.updater.automaticallyChecksForUpdates = newValue }
+    }
+}
+
+// MARK: - Check for Updates View
+
 struct CheckForUpdatesView: View {
     let updater: SPUUpdater
     
