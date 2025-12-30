@@ -10,11 +10,26 @@ AI-powered visual design diff tool for seamless designer-developer handoff. Nati
 - **Smart Export** - Save comparison images with optional design changes panel
 - **Team-Ready Formats** - One-click copy for Slack and Linear with numbered annotations
 - **Zero Setup** - Just drag and drop PNG images
+- **Auto-Update** - Automatically checks for new versions via GitHub Releases
 - **Native macOS Experience** - Beautiful dark theme with smooth animations
 
 ## Requirements
 
-- macOS 14.0 (Sonoma) or later
+- macOS 13.0 (Ventura) or later
+
+## Installation
+
+### Download from Website
+1. Download the latest DMG from [GitHub Releases](https://github.com/YOUR_USERNAME/design_diff_macapp/releases/latest)
+2. Open the DMG file
+3. Drag `DesignDiff.app` to your Applications folder
+4. Launch DesignDiff from Applications
+
+### First Launch
+On first launch, you may see a security warning. To allow the app:
+1. Go to **System Settings** → **Privacy & Security**
+2. Scroll down and click **Open Anyway**
+3. Or run: `xattr -cr /Applications/DesignDiff.app` in Terminal
 
 ## Usage
 
@@ -37,11 +52,16 @@ AI-powered visual design diff tool for seamless designer-developer handoff. Nati
    - Save comparison PNG with or without design changes panel
    - Choose to include annotation numbers independently
 
+## Updates
+
+DesignDiff automatically checks for updates on startup. You can also manually check:
+- Menu: **DesignDiff** → **Check for Updates...**
+
 ## Project Structure
 
 ```
 DesignDiff/
-├── DesignDiffApp.swift      # App entry point
+├── DesignDiffApp.swift      # App entry point with auto-update integration
 ├── ContentView.swift        # Main UI with upload/loading/results flow
 ├── Models/
 │   ├── Models.swift         # Data models (AnalysisResult, ChangeAnnotation, etc.)
@@ -53,7 +73,8 @@ DesignDiff/
 │   └── SettingsView.swift         # App settings
 └── Services/
     ├── ImageDiffEngine.swift      # Pixel-level diff generation
-    └── OpenAIService.swift        # GPT-4o API integration for change detection
+    ├── OpenAIService.swift        # GPT-4o API integration for change detection
+    └── UpdateManager.swift        # Auto-update service using Sparkle
 ```
 
 ## Output Formats
@@ -96,6 +117,23 @@ See attached images for visual reference.
 - No data is permanently stored on external servers
 - All annotations and edits are stored locally on your Mac
 - Network connection required for AI analysis
+
+## Building from Source
+
+See [DEPLOYMENT_GUIDE.md](../../DEPLOYMENT_GUIDE.md) for detailed build and deployment instructions.
+
+Quick build:
+```bash
+# Clone the repository
+git clone https://github.com/YOUR_USERNAME/design_diff_macapp.git
+cd design_diff_macapp
+
+# Open in Xcode and add Sparkle framework
+open DesignDiff/DesignDiff.xcodeproj
+
+# Build DMG
+./scripts/create-dmg.sh
+```
 
 ## License
 
