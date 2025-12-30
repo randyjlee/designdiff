@@ -4,7 +4,10 @@ import AppKit
 class OpenAIService {
     
     // MARK: - API Key Configuration
-    private let apiKey = "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"
+    // ⚠️ SECURITY WARNING: This API key is embedded in the app for demo purposes only.
+    // For production apps, use environment variables, Keychain, or a secure backend.
+    // TODO: Replace with your new OpenAI API key
+    private let apiKey = "YOUR_NEW_API_KEY_HERE"
     
     enum OpenAIError: LocalizedError {
         case invalidAPIKey

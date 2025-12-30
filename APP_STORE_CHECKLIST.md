@@ -5,8 +5,9 @@
 ### 1. OpenAI API 키 보안 문제 (🔴 필수)
 **문제**: `OpenAIService.swift`에 API 키가 하드코딩되어 있습니다.
 ```swift
-private let apiKey = "sk-proj-JDFzW93bYyBRaLWPY..."
+private let apiKey = "YOUR_NEW_API_KEY_HERE"
 ```
+**상태**: ⚠️ 새 API 키로 교체 필요
 
 **해결 방법**:
 - **옵션 A (권장)**: 서버 사이드 API 구축
@@ -159,6 +160,7 @@ xcodebuild archive \
 - [ ] 테스트플라이트 베타 테스트 고려
 - [ ] 지역화(한국어/영어) 고려
 - [ ] macOS 최소 버전 확인 (현재: 14.0)
+
 
 
 
