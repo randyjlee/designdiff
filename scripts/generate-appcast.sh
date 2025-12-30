@@ -8,7 +8,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BUILD_DIR="${SCRIPT_DIR}/../build"
 APP_NAME="DesignDiff"
-VERSION="1.0.0"
+VERSION="1.0.1"
 DMG_NAME="${APP_NAME}-${VERSION}.dmg"
 REPO_URL="https://github.com/randyjlee/designdiff"
 PUBLIC_KEY="aM3QGDzAhGJWfSiS8H5Dln8bmORrMOJiOE9+zZBi26s="
@@ -37,7 +37,7 @@ cat > "${BUILD_DIR}/appcast.xml" <<EOF
             <sparkle:releaseNotesLink>${REPO_URL}/releases/tag/v${VERSION}</sparkle:releaseNotesLink>
             <pubDate>${DMG_DATE}</pubDate>
             <enclosure url="${REPO_URL}/releases/download/v${VERSION}/${DMG_NAME}"
-                       sparkle:version="1"
+                       sparkle:version="2"
                        sparkle:shortVersionString="${VERSION}"
                        length="${DMG_SIZE}"
                        type="application/octet-stream"

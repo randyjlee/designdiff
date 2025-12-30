@@ -9,8 +9,8 @@ set -e
 APP_NAME="DesignDiff"
 BUILD_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)/build"
 APP_PATH="${BUILD_DIR}/${APP_NAME}.app"
-DMG_PATH="${BUILD_DIR}/${APP_NAME}-1.0.0.dmg"
-ZIP_PATH="${BUILD_DIR}/${APP_NAME}-1.0.0.zip"
+DMG_PATH="${BUILD_DIR}/${APP_NAME}-1.0.1.dmg"
+ZIP_PATH="${BUILD_DIR}/${APP_NAME}-1.0.1.zip"
 
 # Check for required environment variables
 if [ -z "$APPLE_ID" ]; then
