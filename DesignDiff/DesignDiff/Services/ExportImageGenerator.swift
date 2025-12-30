@@ -35,11 +35,35 @@ class ExportImageGenerator {
         let footerHeight: CGFloat = 50
         let totalHeight = padding + headerHeight + imageHeight + sectionSpacing + changesHeight + footerHeight + padding
         
-        // Create image
+        // 3x scale for high quality
+        let scale: CGFloat = 3.0
         let size = NSSize(width: exportWidth, height: totalHeight)
-        let image = NSImage(size: size)
+        let scaledSize = NSSize(width: exportWidth * scale, height: totalHeight * scale)
         
-        image.lockFocus()
+        // Create high-resolution bitmap
+        guard let bitmapRep = NSBitmapImageRep(
+            bitmapDataPlanes: nil,
+            pixelsWide: Int(scaledSize.width),
+            pixelsHigh: Int(scaledSize.height),
+            bitsPerSample: 8,
+            samplesPerPixel: 4,
+            hasAlpha: true,
+            isPlanar: false,
+            colorSpaceName: .deviceRGB,
+            bytesPerRow: 0,
+            bitsPerPixel: 0
+        ) else { return nil }
+        
+        let image = NSImage(size: size)
+        image.addRepresentation(bitmapRep)
+        
+        // Set up graphics context with scale
+        NSGraphicsContext.saveGraphicsState()
+        let context = NSGraphicsContext(bitmapImageRep: bitmapRep)
+        NSGraphicsContext.current = context
+        
+        // Apply scale transform
+        context?.cgContext.scaleBy(x: scale, y: scale)
         
         // Draw background
         backgroundColor.setFill()
@@ -61,7 +85,7 @@ class ExportImageGenerator {
         // Draw footer with logo
         drawFooter()
         
-        image.unlockFocus()
+        NSGraphicsContext.restoreGraphicsState()
         
         return image
     }
@@ -282,6 +306,10 @@ class ExportImageGenerator {
         logoText.draw(at: NSPoint(x: startX + iconSize + 6, y: footerY), withAttributes: logoAttributes)
     }
 }
+
+
+
+
 
 
 

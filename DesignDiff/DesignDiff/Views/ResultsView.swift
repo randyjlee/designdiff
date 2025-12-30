@@ -21,7 +21,6 @@ class ExportImageGenerator {
     func generateExportImage() -> NSImage? {
         // Adjust width based on whether annotations are included
         let annotationPanelWidth: CGFloat = includeAnnotations ? 280 : 0
-        let panelSpacing: CGFloat = includeAnnotations ? 24 : 0
         let exportWidth: CGFloat = includeAnnotations ? 1400 : 1120
         let imageHeight: CGFloat = 550
         let headerHeight: CGFloat = 50
@@ -37,13 +36,38 @@ class ExportImageGenerator {
         let contentHeight = includeAnnotations ? max(imageHeight, totalAnnotationsHeight) : imageHeight
         let totalHeight = headerHeight + contentHeight + padding
         
+        // 3x scale for high quality
+        let scale: CGFloat = 3.0
         let size = CGSize(width: exportWidth, height: totalHeight)
+        let scaledSize = CGSize(width: exportWidth * scale, height: totalHeight * scale)
+        
+        // Create high-resolution bitmap
+        guard let bitmapRep = NSBitmapImageRep(
+            bitmapDataPlanes: nil,
+            pixelsWide: Int(scaledSize.width),
+            pixelsHigh: Int(scaledSize.height),
+            bitsPerSample: 8,
+            samplesPerPixel: 4,
+            hasAlpha: true,
+            isPlanar: false,
+            colorSpaceName: .deviceRGB,
+            bytesPerRow: 0,
+            bitsPerPixel: 0
+        ) else { return nil }
         
         let image = NSImage(size: size)
-        image.lockFocus()
+        image.addRepresentation(bitmapRep)
         
-        guard let context = NSGraphicsContext.current?.cgContext else {
-            image.unlockFocus()
+        // Set up graphics context with scale
+        NSGraphicsContext.saveGraphicsState()
+        let context = NSGraphicsContext(bitmapImageRep: bitmapRep)
+        NSGraphicsContext.current = context
+        
+        // Apply scale transform
+        context?.cgContext.scaleBy(x: scale, y: scale)
+        
+        guard let cgContext = context?.cgContext else {
+            NSGraphicsContext.restoreGraphicsState()
             return nil
         }
         
@@ -90,7 +114,7 @@ class ExportImageGenerator {
         
         let singleImageWidth = (imageAreaWidth - 16) / 2
         let beforeRect = NSRect(x: padding, y: contentY, width: singleImageWidth, height: contentHeight - 26)
-        drawCheckerboard(in: beforeRect, context: context)
+        drawCheckerboard(in: beforeRect, context: cgContext)
         drawImageWithBorder(beforeImage, in: beforeRect, borderColor: redColor)
         
         // Draw After image with GREEN label
@@ -101,7 +125,7 @@ class ExportImageGenerator {
         "After".draw(at: NSPoint(x: padding + singleImageWidth + 16, y: contentY + contentHeight - 18), withAttributes: afterTitleAttrs)
         
         let afterRect = NSRect(x: padding + singleImageWidth + 16, y: contentY, width: singleImageWidth, height: contentHeight - 26)
-        drawCheckerboard(in: afterRect, context: context)
+        drawCheckerboard(in: afterRect, context: cgContext)
         drawImageWithBorder(afterImage, in: afterRect, borderColor: greenColor)
         
         // Draw annotation badges on after image (always show numbers)
@@ -161,7 +185,7 @@ class ExportImageGenerator {
             }
         }
         
-        image.unlockFocus()
+        NSGraphicsContext.restoreGraphicsState()
         return image
     }
     
