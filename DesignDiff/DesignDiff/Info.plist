@@ -21,9 +21,9 @@
 	
 	<!-- Sparkle Auto-Update Configuration -->
 	<key>SUFeedURL</key>
-	<string>https://github.com/YOUR_USERNAME/design_diff_macapp/releases/latest/download/appcast.xml</string>
+	<string>https://github.com/randyjlee/designdiff/releases/latest/download/appcast.xml</string>
 	<key>SUPublicEDKey</key>
-	<string>YOUR_PUBLIC_KEY_HERE</string>
+	<string>aM3QGDzAhGJWfSiS8H5Dln8bmORrMOJiOE9+zZBi26s=</string>
 	<key>SUEnableAutomaticChecks</key>
 	<true/>
 	<key>SUScheduledCheckInterval</key>
