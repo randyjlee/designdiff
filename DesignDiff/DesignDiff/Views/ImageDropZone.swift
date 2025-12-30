@@ -1,36 +1,11 @@
 import SwiftUI
 import UniformTypeIdentifiers
 
-enum DropZoneType: Equatable {
-    case before
-    case after
-    
-    var label: String {
-        switch self {
-        case .before: return "Before"
-        case .after: return "After"
-        }
-    }
-    
-    var icon: String {
-        switch self {
-        case .before: return "arrow.left"
-        case .after: return "arrow.right"
-        }
-    }
-    
-    var accentColor: Color {
-        switch self {
-        case .before: return Color(hex: "f43f5e") // Rose
-        case .after: return Color(hex: "10b981") // Emerald
-        }
-    }
-}
-
 struct ImageDropZone: View {
     let type: DropZoneType
     let image: NSImage?
     let onDrop: (NSImage?) -> Void
+    let onCrop: (NSImage) -> Void
     let isSelected: Bool
     let onSelect: () -> Void
     
@@ -222,7 +197,7 @@ struct ImageDropZone: View {
                 }
                 
                 DispatchQueue.main.async {
-                    onDrop(image)
+                    onCrop(image)
                 }
             }
             return true
@@ -237,7 +212,7 @@ struct ImageDropZone: View {
                     guard let data = data, let image = NSImage(data: data) else { return }
                     
                     DispatchQueue.main.async {
-                        onDrop(image)
+                        onCrop(image)
                     }
                 }
                 return true
@@ -255,15 +230,15 @@ struct ImageDropZone: View {
         panel.message = "Select an image file"
         
         if panel.runModal() == .OK, let url = panel.url, let image = NSImage(contentsOf: url) {
-            onDrop(image)
+            onCrop(image)
         }
     }
 }
 
 #Preview {
     HStack(spacing: 24) {
-        ImageDropZone(type: .before, image: nil, onDrop: { _ in }, isSelected: false, onSelect: {})
-        ImageDropZone(type: .after, image: nil, onDrop: { _ in }, isSelected: true, onSelect: {})
+        ImageDropZone(type: .before, image: nil, onDrop: { _ in }, onCrop: { _ in }, isSelected: false, onSelect: {})
+        ImageDropZone(type: .after, image: nil, onDrop: { _ in }, onCrop: { _ in }, isSelected: true, onSelect: {})
     }
     .padding(40)
     .background(Color(hex: "0a0a0b"))

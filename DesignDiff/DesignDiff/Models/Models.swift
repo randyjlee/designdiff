@@ -1,5 +1,34 @@
 import Foundation
 import AppKit
+import SwiftUI
+
+// MARK: - Drop Zone Type
+
+enum DropZoneType: Equatable {
+    case before
+    case after
+    
+    var label: String {
+        switch self {
+        case .before: return "Before"
+        case .after: return "After"
+        }
+    }
+    
+    var icon: String {
+        switch self {
+        case .before: return "arrow.left"
+        case .after: return "arrow.right"
+        }
+    }
+    
+    var accentColor: Color {
+        switch self {
+        case .before: return Color(hex: "f43f5e") // Rose
+        case .after: return Color(hex: "10b981") // Emerald
+        }
+    }
+}
 
 // MARK: - Analysis Result Models
 

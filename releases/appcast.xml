@@ -1,0 +1,14 @@
+<?xml version="1.0" standalone="yes"?>
+<rss xmlns:sparkle="http://www.andymatuschak.org/xml-namespaces/sparkle" version="2.0">
+    <channel>
+        <title>DesignDiff</title>
+        <item>
+            <title>1.0.2</title>
+            <pubDate>Mon, 29 Dec 2025 21:51:27 -0500</pubDate>
+            <sparkle:version>3</sparkle:version>
+            <sparkle:shortVersionString>1.0.2</sparkle:shortVersionString>
+            <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
+            <enclosure url="https://github.com/randyjlee/designdiff/releases/latest/download/DesignDiff-1.0.2.dmg" length="4449279" type="application/octet-stream" sparkle:edSignature="3kO3BcWVQs9oop/aiG6dukfWzaweO7G1rlkR0vAOm/gcixlreRauqZvLoGGQ7rccS7gBlv7OgDQHxp18wbKFDQ=="/>
+        </item>
+    </channel>
+</rss>

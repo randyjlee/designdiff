@@ -17,6 +17,11 @@ class AppState: ObservableObject {
     @Published var editableAnnotations: [EditableAnnotation] = []
     @Published var selectedAnnotationId: UUID?
     
+    // Crop state
+    @Published var showCropView: Bool = false
+    @Published var pendingCropImage: NSImage?
+    @Published var pendingCropType: DropZoneType?
+    
     // Demo version - Daily usage limit
     @Published var showLimitAlert: Bool = false
     @AppStorage("dailyAnalysisCount") private var dailyAnalysisCount: Int = 0
@@ -51,6 +56,33 @@ class AppState: ObservableObject {
     func setAfterImage(_ image: NSImage?) {
         afterImage = image
         reset()
+    }
+    
+    // MARK: - Crop Methods
+    
+    func showCropForImage(_ image: NSImage, type: DropZoneType) {
+        pendingCropImage = image
+        pendingCropType = type
+        showCropView = true
+    }
+    
+    func completeCrop(with croppedImage: NSImage) {
+        guard let type = pendingCropType else { return }
+        
+        switch type {
+        case .before:
+            setBeforeImage(croppedImage)
+        case .after:
+            setAfterImage(croppedImage)
+        }
+        
+        cancelCrop()
+    }
+    
+    func cancelCrop() {
+        showCropView = false
+        pendingCropImage = nil
+        pendingCropType = nil
     }
     
     func reset() {

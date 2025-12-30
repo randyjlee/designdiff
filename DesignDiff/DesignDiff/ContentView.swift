@@ -5,45 +5,61 @@ struct ContentView: View {
     @EnvironmentObject var appState: AppState
     
     var body: some View {
-        ZStack {
-            // Background
-            LinearGradient(
-                colors: [
-                    Color(hex: "0a0a0b"),
-                    Color(hex: "111113"),
-                    Color(hex: "0a0a0b")
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-            .ignoresSafeArea()
-            
-            // Gradient orbs
-            GeometryReader { geo in
-                Circle()
-                    .fill(Color(hex: "2dd4bf").opacity(0.1))
-                    .frame(width: 400, height: 400)
-                    .blur(radius: 80)
-                    .offset(x: geo.size.width - 200, y: geo.size.height / 2)
-            }
-            
-            VStack(spacing: 0) {
-                // Header (minimal drag area)
-                HeaderView()
-                
-                // Main Content
-                if appState.isProcessing {
-                    LoadingView()
-                        .transition(.opacity)
-                } else if case .complete = appState.status, appState.analysisResult != nil {
-                    ResultsView()
-                        .transition(.opacity)
-                } else {
-                    UploadView()
-                        .transition(.opacity)
+        Group {
+            if appState.showCropView, let image = appState.pendingCropImage {
+                // Show ONLY the crop view - nothing else
+                ImageCropView(
+                    image: image,
+                    onComplete: { croppedImage in
+                        appState.completeCrop(with: croppedImage)
+                    },
+                    onCancel: {
+                        appState.cancelCrop()
+                    }
+                )
+            } else {
+                // Normal content
+                ZStack {
+                    // Background
+                    LinearGradient(
+                        colors: [
+                            Color(hex: "0a0a0b"),
+                            Color(hex: "111113"),
+                            Color(hex: "0a0a0b")
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+                    .ignoresSafeArea()
+                    
+                    // Gradient orbs
+                    GeometryReader { geo in
+                        Circle()
+                            .fill(Color(hex: "2dd4bf").opacity(0.1))
+                            .frame(width: 400, height: 400)
+                            .blur(radius: 80)
+                            .offset(x: geo.size.width - 200, y: geo.size.height / 2)
+                    }
+                    
+                    VStack(spacing: 0) {
+                        // Header (minimal drag area)
+                        HeaderView()
+                        
+                        // Main Content
+                        if appState.isProcessing {
+                            LoadingView()
+                                .transition(.opacity)
+                        } else if case .complete = appState.status, appState.analysisResult != nil {
+                            ResultsView()
+                                .transition(.opacity)
+                        } else {
+                            UploadView()
+                                .transition(.opacity)
+                        }
+                    }
+                    .animation(.easeInOut(duration: 0.3), value: appState.status)
                 }
             }
-            .animation(.easeInOut(duration: 0.3), value: appState.status)
         }
         .preferredColorScheme(.dark)
     }
@@ -75,9 +91,9 @@ struct HeaderView: View {
                 .buttonStyle(.plain)
             }
         }
-        .padding(.leading, 80)  // Space for window controls
-        .padding(.trailing, 24)
-        .frame(height: 28)
+        .padding(.horizontal, 24)
+        .frame(height: 44)
+        .frame(maxWidth: .infinity)
     }
 }
 
@@ -139,6 +155,7 @@ struct UploadView: View {
                     type: .before,
                     image: appState.beforeImage,
                     onDrop: { appState.setBeforeImage($0) },
+                    onCrop: { appState.showCropForImage($0, type: .before) },
                     isSelected: selectedZone == .before,
                     onSelect: { selectedZone = .before }
                 )
@@ -147,6 +164,7 @@ struct UploadView: View {
                     type: .after,
                     image: appState.afterImage,
                     onDrop: { appState.setAfterImage($0) },
+                    onCrop: { appState.showCropForImage($0, type: .after) },
                     isSelected: selectedZone == .after,
                     onSelect: { selectedZone = .after }
                 )

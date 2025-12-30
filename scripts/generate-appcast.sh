@@ -8,7 +8,7 @@ set -e
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BUILD_DIR="${SCRIPT_DIR}/../build"
 APP_NAME="DesignDiff"
-VERSION="1.0.1"
+VERSION="1.0.2"
 DMG_NAME="${APP_NAME}-${VERSION}.dmg"
 REPO_URL="https://github.com/randyjlee/designdiff"
 PUBLIC_KEY="aM3QGDzAhGJWfSiS8H5Dln8bmORrMOJiOE9+zZBi26s="
