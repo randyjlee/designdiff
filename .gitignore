@@ -51,4 +51,10 @@ coverage/
 *password*.jpg
 .env.notarization
 
+# API Keys - DO NOT COMMIT
+DesignDiff/DesignDiff/Services/OpenAIService.swift
+
+
+
+
 
