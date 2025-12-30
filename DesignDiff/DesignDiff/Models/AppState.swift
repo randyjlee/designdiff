@@ -17,6 +17,15 @@ class AppState: ObservableObject {
     @Published var editableAnnotations: [EditableAnnotation] = []
     @Published var selectedAnnotationId: UUID?
     
+    // Demo version - Daily usage limit
+    @Published var showLimitAlert: Bool = false
+    @AppStorage("dailyAnalysisCount") private var dailyAnalysisCount: Int = 0
+    @AppStorage("lastAnalysisDate") private var lastAnalysisDate: String = ""
+    
+    // MARK: - Constants
+    
+    private let dailyAnalysisLimit = 5
+    
     // MARK: - Services
     
     private let diffEngine = ImageDiffEngine()
@@ -136,9 +145,46 @@ class AppState: ObservableObject {
         return nil
     }
     
+    // MARK: - Daily Limit Management
+    
+    private func getTodayString() -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        return formatter.string(from: Date())
+    }
+    
+    private func resetCountIfNewDay() {
+        let today = getTodayString()
+        if lastAnalysisDate != today {
+            dailyAnalysisCount = 0
+            lastAnalysisDate = today
+        }
+    }
+    
+    private func canAnalyze() -> Bool {
+        resetCountIfNewDay()
+        return dailyAnalysisCount < dailyAnalysisLimit
+    }
+    
+    private func incrementAnalysisCount() {
+        resetCountIfNewDay()
+        dailyAnalysisCount += 1
+    }
+    
+    var remainingAnalyses: Int {
+        resetCountIfNewDay()
+        return max(0, dailyAnalysisLimit - dailyAnalysisCount)
+    }
+    
     func analyze() async {
         guard let before = beforeImage, let after = afterImage else {
             status = .error("Please upload both before and after images")
+            return
+        }
+        
+        // Check daily limit
+        if !canAnalyze() {
+            showLimitAlert = true
             return
         }
         
@@ -160,6 +206,10 @@ class AppState: ObservableObject {
             
             analysisResult = analysis
             initializeEditableAnnotations()
+            
+            // Increment count on successful analysis
+            incrementAnalysisCount()
+            
             status = .complete
             
         } catch {

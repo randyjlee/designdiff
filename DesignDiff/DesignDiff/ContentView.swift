@@ -110,9 +110,26 @@ struct UploadView: View {
                         .font(.system(size: 22, weight: .medium))
                         .foregroundColor(.white.opacity(0.9))
                     
-                    Text("Get AI-powered change detection, developer specs, and team-ready summaries")
-                        .font(.system(size: 14))
-                        .foregroundColor(.white.opacity(0.5))
+                    HStack(spacing: 4) {
+                        Text("Get AI-powered change detection, developer specs, and team-ready summaries")
+                            .font(.system(size: 14))
+                            .foregroundColor(.white.opacity(0.5))
+                        
+                        // Demo badge
+                        Text("DEMO")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundColor(Color(hex: "ff6b35"))
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(Color(hex: "ff6b35").opacity(0.2))
+                            .cornerRadius(4)
+                    }
+                    
+                    // Remaining analyses counter
+                    Text("\(appState.remainingAnalyses) of 5 analyses remaining today")
+                        .font(.system(size: 12, weight: .medium))
+                        .foregroundColor(appState.remainingAnalyses <= 1 ? Color(hex: "ef4444") : Color(hex: "2dd4bf"))
+                        .opacity(0.8)
                 }
             }
             
@@ -192,6 +209,11 @@ struct UploadView: View {
             }
             
             Spacer()
+        }
+        .alert("Daily Limit Reached", isPresented: $appState.showLimitAlert) {
+            Button("OK", role: .cancel) { }
+        } message: {
+            Text("You've reached the daily limit of 5 analyses for the demo version.\n\nPlease try again tomorrow or upgrade to the full version for unlimited analyses.")
         }
     }
     
