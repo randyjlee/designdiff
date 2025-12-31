@@ -7,7 +7,7 @@ set -e
 
 # Configuration
 APP_NAME="DesignDiff"
-VERSION="1.0.2"
+VERSION="1.0.3"
 BUILD_DIR="build"
 DMG_NAME="${APP_NAME}-${VERSION}.dmg"
 VOLUME_NAME="${APP_NAME} ${VERSION}"
