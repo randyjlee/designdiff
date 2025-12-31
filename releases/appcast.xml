@@ -3,12 +3,12 @@
     <channel>
         <title>DesignDiff</title>
         <item>
-            <title>1.0.2</title>
-            <pubDate>Mon, 29 Dec 2025 21:51:27 -0500</pubDate>
-            <sparkle:version>3</sparkle:version>
-            <sparkle:shortVersionString>1.0.2</sparkle:shortVersionString>
+            <title>1.0.3</title>
+            <pubDate>Wed, 31 Dec 2025 13:07:26 -0500</pubDate>
+            <sparkle:version>4</sparkle:version>
+            <sparkle:shortVersionString>1.0.3</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <enclosure url="https://github.com/randyjlee/designdiff/releases/latest/download/DesignDiff-1.0.2.dmg" length="4449279" type="application/octet-stream" sparkle:edSignature="3kO3BcWVQs9oop/aiG6dukfWzaweO7G1rlkR0vAOm/gcixlreRauqZvLoGGQ7rccS7gBlv7OgDQHxp18wbKFDQ=="/>
+            <enclosure url="https://github.com/randyjlee/designdiff/releases/latest/download/DesignDiff-1.0.3.dmg" length="4515608" type="application/octet-stream" sparkle:edSignature="Q6NVQrPxXxNlBD7kJRKNl6gqohNUO9faq9/Vzx0dmRPkK9+COOwU9DvMVn4xJnMV0gRXBZxliGk8Iy1RRlxBAA=="/>
         </item>
     </channel>
 </rss>
