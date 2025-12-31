@@ -8,7 +8,7 @@
             <sparkle:version>4</sparkle:version>
             <sparkle:shortVersionString>1.0.3</sparkle:shortVersionString>
             <sparkle:minimumSystemVersion>14.0</sparkle:minimumSystemVersion>
-            <enclosure url="https://github.com/randyjlee/designdiff/releases/latest/download/DesignDiff-1.0.3.dmg" length="4515608" type="application/octet-stream" sparkle:edSignature="Q6NVQrPxXxNlBD7kJRKNl6gqohNUO9faq9/Vzx0dmRPkK9+COOwU9DvMVn4xJnMV0gRXBZxliGk8Iy1RRlxBAA=="/>
+            <enclosure url="https://github.com/randyjlee/designdiff/releases/latest/download/DesignDiff-1.0.3.dmg" length="4513388" type="application/octet-stream" sparkle:edSignature="HWODFOk2CYiFgn2NKo0HWMkSyQprkWl9oGGX8NcdGHUoAWXLrjKJnVprDU362A4FE79BmKS8kMzc7eG/MAsgAw=="/>
         </item>
     </channel>
 </rss>
